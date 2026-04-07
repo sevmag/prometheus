@@ -155,3 +155,105 @@ also non-fatal.
   paths.  Relative paths are interpreted as relative to the `prometheus`
   package directory (`prometheus/prometheus/`) so they work regardless of the
   process working directory.
+
+---
+
+## Phase 0 — Safety net (tests, CI, macOS compatibility)
+
+### Added
+
+#### Test suite
+
+- **`tests/conftest.py`** — pytest session configuration.  `chdir`s to the
+  repository root at session start so all path-relative operations work
+  regardless of where `pytest` is invoked.  Adds a `--run-slow` CLI option
+  and a collection hook that automatically skips any test marked `slow` unless
+  that flag is passed.
+
+- **`tests/test_smoke.py`** — import smoke tests for all 20 live sub-modules
+  across `prometheus`, `hyperion`, and `olympus`.  Runs in under 5 seconds.
+  One `xfail` marks `prometheus.weighting` (requires the optional
+  `LeptonWeighter` package which is not a declared dependency).
+
+- **`tests/test_e2e.py`** — end-to-end physics regression test
+  (`@pytest.mark.slow`).  Runs a 100-event water simulation with seed 42 and
+  asserts that the total photon hit count stays within ±1 % of the baseline
+  value (25 193 hits).  Isolated via `tmp_path` so it never writes to the
+  working tree.  Activated with `pytest --run-slow`.
+
+- **`tests/test_utils.py`** — 48 unit tests covering `units`, `iter_or_rep`,
+  `convert_loss_name`, the PDG/f2k/pstring translator dictionaries,
+  `path_length_sampling`, `find_cog`, and `ExtendedEnum`.
+
+- **`tests/test_dataclasses.py`** — 67 unit tests covering `Particle`,
+  `PropagatableParticle`, `Loss`, `Hit`, `Interactions`, `MCRecord`,
+  `PhotonSource`, `should_propagate`, and `accumulate_hits`.
+
+- **`tests/test_detector_unit.py`** — 43 unit tests covering `Module`,
+  `Medium`, `Detector` (construction, key lookup, addition, geometry
+  properties), `make_line`, `make_grid`, and `detector_from_geo`.
+
+- **`tests/test_geo.py`** — 18 unit tests covering `from_geo` (water, ice,
+  IceCube, and P-One geofiles) and a full write-then-read round-trip for
+  `geo_from_coords`.
+
+- **`pyproject.toml`** — added `[tool.pytest.ini_options]` block:
+  `testpaths = ["tests"]` and `markers = ["slow: ..."]` so pytest discovers
+  tests without any path arguments and the `slow` marker is registered (no
+  `PytestUnknownMarkWarning`).
+
+- **`scripts/fixes.sh`** — added `pip install pytest` so pytest is available
+  immediately after installation without any manual step.
+
+- **`.github/workflows/ci.yml`** — GitHub Actions CI workflow that runs on
+  every push and pull request to any branch.  Installs prometheus via
+  `install.sh` and runs the fast test suite (`python -m pytest --tb=short
+  -q`).  The slow e2e tests are intentionally excluded from CI (~8 min
+  runtime) and must be run locally before merging changes that touch the
+  simulation pipeline.
+
+#### macOS compatibility
+
+- **`scripts/setup_env.sh`** — platform detection (`uname -s` + `uname -m`)
+  to select the correct micromamba binary for `linux-64`, `linux-aarch64`,
+  `osx-64`, or `osx-arm64`.  The executability check now uses
+  `"${PWD}/bin/micromamba" --version` instead of a plain `[ -f … ]` test.
+
+- **`scripts/activate.sh`** — removed the `realpath -m` call (GNU-only,
+  absent on macOS BSD `realpath`).  Shell detection now reads `$SHELL` and
+  selects the correct micromamba hook for `zsh` or `bash`.
+
+- **`scripts/install_leptoninjector_legacy.sh`** — replaced `wget` with
+  `curl -fsSL` (wget is not installed by default on macOS).  Replaced
+  `$(nproc)` with `$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)` in both
+  `make -j` invocations to work on macOS.
+
+- **`scripts/install_ppc.sh`** — added an early exit on macOS (`uname -s ==
+  Darwin`) with a clear message; PPC requires CUDA and is Linux-only.
+
+- **`INSTALL_NOTES.md`** — Quick Start section, platform compatibility table,
+  macOS-specific notes, and a known-limitations table.
+
+#### Repository hygiene
+
+- **`.gitignore`** — added `PROPOSAL_tables/`, `*.f2k`, `*.ppc`,
+  `__pycache__/`, and `*.egg-info/` to prevent generated files from being
+  accidentally committed.
+
+### Removed
+
+- **`tests/test_gvd.py`** and **`tests/test_icecube_gen2.py`** — both tests
+  imported from the legacy `hebe` package which is no longer installed.
+  Deleted rather than left as permanently broken skips.
+
+### Fixed
+
+- **`tests/test_pone.py`**, **`tests/test_icecube.py`**,
+  **`tests/test_injection.py`** — removed `sys.path.append("..")` hacks;
+  all paths are now relative to the repository root (via the `conftest.py`
+  `chdir`).  Geofile paths updated from `../prometheus/data/` to
+  `resources/geofiles/`.
+
+- **`tests/test_icecube.py`** — updated `outer_cylinder` and `outer_radius`
+  expected values to match the current IceCube geofile geometry computation
+  (`outer_cylinder = [596.28, 1037.38]`, `outer_radius = 789.82`).

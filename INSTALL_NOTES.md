@@ -41,7 +41,7 @@ Run this in every new terminal before using Prometheus:
 source scripts/activate.sh .prometheus_env
 ```
 
-To avoid typing this every session, add it to your shell profile (`~/.zshrc` on macOS, `~/.bashrc` on Linux).
+To avoid typing this every session, add it to your shell profile (`~/.bashrc` or `~/.zshrc`).
 
 ### 4. Run the examples
 
@@ -68,64 +68,14 @@ Requires `--with-ppc` at install time and Linux (PPC is not available on macOS).
 | Platform | Status |
 |---|---|
 | Linux x86-64 | Fully supported |
-| Linux aarch64 | Supported (micromamba download correct; LI build untested) |
-| macOS arm64 (Apple Silicon) | Mostly supported — see notes below |
-| macOS x86-64 (Intel) | Mostly supported — see notes below |
-| Windows (native) | Not supported |
+| Linux aarch64 | Supported (LI build untested) |
+| macOS | **Not supported** — use the Docker image |
+| Windows (native) | Not supported — use the Docker image |
 | Windows WSL2 | Same as Linux x86-64 |
 
----
-
-## macOS notes
-
-### Shell (zsh vs bash)
-
-macOS has used **zsh** as the default shell since Catalina (10.15). The installer
-detects the active shell from `$SHELL` and injects the correct micromamba hook
-(`zsh` or `bash`). If you see `command not found: micromamba` after the install
-completes, source the activation script explicitly in your current shell:
-
-```zsh
-source scripts/activate.sh .prometheus_env
-```
-
-### Activation hint at the end of install
-
-The final message prints:
-
-```
-source scripts/activate.sh .prometheus_env
-```
-
-Run this in every new terminal session before using Prometheus. To make it
-permanent, add it to `~/.zshrc` (or `~/.bashrc`).
-
-### PPC (ice simulation) — not available on macOS
-
-PPC is an IceCube GPU/CPU photon propagator that uses Linux-specific compiler flags
-(`--fast-math` for GCC) and GNU make conventions. The installer skips PPC
-automatically on macOS. Ice-mode simulations are not available on macOS.
-
-Water-mode (olympus/JAX) simulations work normally.
-
-### LeptonInjector — build may need Xcode Command Line Tools
-
-LeptonInjector is built from source with CMake. On macOS you must have the Xcode
-Command Line Tools installed:
-
-```zsh
-xcode-select --install
-```
-
-The build uses Boost and SuiteSparse from the conda environment, so no Homebrew
-packages are required. However, the build has only been tested on Linux; if you
-encounter build errors on macOS please open an issue with the full error output.
-
-### `realpath -m` — fixed
-
-The GNU `realpath -m` flag (allow non-existent paths) does not exist on the BSD
-`realpath` shipped with macOS. The installer was updated to avoid calling any
-`realpath` binary; path normalisation is now done in pure shell.
+macOS support was dropped because PROPOSAL's Conan/Boost build and
+LeptonInjector's CMake build both fail consistently on macOS.
+Docker is the recommended path for macOS and Windows users.
 
 ---
 
@@ -141,7 +91,7 @@ available (`apt install curl` / `dnf install curl`).
 
 | Issue | Workaround |
 |---|---|
-| PPC not available on macOS | Water-mode simulations (olympus) work without PPC |
-| LeptonInjector build on macOS is untested | Report build failures with full CMake output |
+| macOS / Windows not supported natively | Use the Docker image |
+| PPC not available without `--with-ppc` | Pass `--with-ppc` at install time (Linux only) |
 | GENIE loading requires optional deps | `pip install uproot pandas` or see Phase 13 of refactor.md |
-| Intel Arc GPU not accessible in WSL2 | Requires `intel-compute-runtime` inside WSL2 and a recent Windows Intel Graphics driver; see docs/prometheus/gpu.md (planned) |
+| Intel Arc GPU not accessible in WSL2 | Requires `intel-compute-runtime` inside WSL2 and a recent Windows Intel Graphics driver |
