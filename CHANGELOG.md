@@ -257,3 +257,123 @@ also non-fatal.
 - **`tests/test_icecube.py`** — updated `outer_cylinder` and `outer_radius`
   expected values to match the current IceCube geofile geometry computation
   (`outer_cylinder = [596.28, 1037.38]`, `outer_radius = 789.82`).
+
+---
+
+## macOS removal & Docker support
+
+### Added
+
+#### Docker
+
+- **`container/Dockerfile`** — self-contained CPU image based on
+  `ubuntu:22.04`.  Six-stage multi-stage build:
+  `base` (system packages + micromamba + conda env) →
+  `proposal` (pip install + pre-build PROPOSAL interpolation tables) →
+  `leptoninjector` (CMake build from vendored `resources/LeptonInjector/`) →
+  `ppc` (`make cpu` from vendored `resources/PPC_executables/PPC/`) →
+  `prometheus_install` (fennel + prometheus editable install) →
+  `final` (ENV vars + import smoke test).
+  Build: `docker build -f container/Dockerfile -t prometheus:cpu .`
+  (from repo root).
+
+- **`container/Dockerfile.gpu`** — GPU/CUDA variant based on
+  `nvidia/cuda:12.3.2-devel-ubuntu22.04`.  Identical to the CPU image except
+  PPC is compiled with `make gpu arch=${SM_ARCH}` (default SM 89, Ada
+  Lovelace); the CPU PPC fallback is also built.  Override the SM architecture
+  at build time with `--build-arg SM_ARCH=80` (A100) etc.
+
+- **`container/build_proposal_tables.py`** — shared script (promoted from
+  `container/new_kernel/`) that triggers PROPOSAL table generation at
+  image-build time so the first simulation run inside the container is instant.
+
+- **`container/README.md`** — pull / run / Singularity conversion
+  instructions, local build commands, SM architecture reference table, and a
+  guide to publishing new releases via GitHub Actions.
+
+- **`scripts/docker_test.sh`** — local offline test script.  Builds the image
+  and validates it before pushing: smoke tests (`tests/test_smoke.py`) then
+  the full fast unit suite.  Flags: `--gpu` (test GPU image), `--no-build`
+  (skip build step), `--tag TAG` (custom image tag), `--e2e` (add the
+  100-event physics regression test, ~8 min extra).  Exit codes 1–4 map to
+  build failure, smoke failure, unit-test failure, and e2e failure
+  respectively.
+
+- **`.github/workflows/docker-publish.yml`** — manual `workflow_dispatch`
+  GitHub Actions workflow that builds and pushes images to GHCR
+  (`ghcr.io/harvard-neutrino/prometheus`).  Inputs: `version` (tag, e.g.
+  `v2.0`), `variant` (`cpu` / `gpu` / `both`), `sm_arch` (CUDA SM
+  architecture, default `89`).  Produces versioned and `:latest` tags for
+  both variants.
+
+#### CI — notebook output check
+
+- **`.github/workflows/ci.yml`** — added `notebook-output-check` job that
+  runs before the test job on every push/PR.  Installs `nbstripout` and fails
+  if any `.ipynb` file in the repository contains stored outputs.
+
+#### Git hooks
+
+- **`scripts/install_hooks.sh`** — installs a `pre-push` git hook that
+  automatically strips Jupyter notebook outputs via `nbstripout` before each
+  push.  If any notebook is found with outputs, the hook strips them, commits
+  the clean versions, and asks the developer to re-push.  Run once after
+  cloning: `bash scripts/install_hooks.sh`.
+
+#### Examples
+
+- **`examples/03_docker_water.py`** — runs the standard water-case simulation
+  inside the `prometheus:cpu` Docker image (or any image specified via
+  `--image`).  Accepts CLI arguments for all key simulation parameters:
+  `--nevents`, `--geo`, `--seed`, `--ranged`, `--min-energy`, `--max-energy`.
+  Output files (parquet + LeptonInjector HDF5) are written to a host
+  directory (default `./output`) via a Docker volume mount (`--output-dir`).
+
+- **`examples/04_event_view.py`** — 3-D matplotlib event visualisation.
+  Loads a Prometheus parquet output file and renders a 3-D scatter plot of
+  all OMs.  By default shows the brightest event (most photon hits).
+  Hit OMs are drawn as colored spheres: color encodes mean photon arrival
+  time (black → purple → orange = early → late) and sphere size is
+  proportional to √(photon count).  Unhit OMs appear as small black dots.
+  Background color is automatically set to dark water-blue or light ice-blue
+  based on the geo file medium.  Flags: `--geo`, `--event`, `--out`,
+  `--show`, `--dpi`.
+
+### Changed
+
+- **`examples/`** — all pre-existing example scripts and notebooks moved to
+  `examples/legacy/` to separate the validated v2 examples from the older
+  exploratory ones.
+
+### Removed
+
+#### macOS support
+
+macOS is no longer supported in the native installer.  The primary reason is
+that the PROPOSAL build system downloads and compiles Boost 1.85 from source
+via Conan (≈5 GB of temporary storage), which routinely causes disk-space
+failures on macOS developer machines.  macOS users should use the Docker image
+instead.
+
+- **`install.sh`** — added a Darwin guard at the top that exits immediately
+  with a clear message pointing to the Docker image.
+
+- **`scripts/setup_env.sh`** — removed `Darwin-x86_64` and `Darwin-arm64`
+  cases from platform detection; the unsupported-platform error message now
+  mentions Docker.
+
+- **`scripts/activate.sh`** — removed "zsh on macOS" comment (functionality
+  unchanged).
+
+- **`scripts/install_leptoninjector_legacy.sh`** — removed
+  `|| sysctl -n hw.logicalcpu` fallback from both `nproc` calls (Linux only).
+
+- **`scripts/install_ppc.sh`** — removed the Darwin early-exit block (macOS
+  is now blocked at the `install.sh` level).
+
+- **`INSTALL_NOTES.md`** — rewritten: macOS row in the platform table updated
+  to "Not supported — use Docker image"; macOS-specific notes section deleted.
+
+- **`README.md`** — "Install from Source" renamed to "Install from Source
+  (Linux only)" with a prominent `IMPORTANT` callout; Docker image pointer
+  added for macOS users.
