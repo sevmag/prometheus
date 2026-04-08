@@ -14,7 +14,7 @@ and `olympus` packages.
 
 ---
 
-## Phase 0 — Safety net (prerequisite for all other phases)
+## Phase 0 — Safety net (prerequisite for all other phases) ✅ DONE
 
 Before touching any logic, establish a deterministic regression baseline:
 
@@ -45,7 +45,7 @@ Add them to `.gitignore` before any other work begins.
 
 ---
 
-## Phase 1 — Delete dead and broken code
+## Phase 1 — Delete dead and broken code ✅ DONE
 
 The following files are either completely broken, superseded, or unreachable from
 any live code path. Removing them reduces the total line count by over 25 % and
@@ -74,7 +74,7 @@ PROPOSAL import.
 
 ---
 
-## Phase 2 — Fix outright non-physics bugs
+## Phase 2 — Fix outright non-physics bugs ✅ DONE
 
 These are correctness bugs with no effect on physics output.
 
@@ -107,7 +107,7 @@ prefix and a Python 3.9 version string. Fix: derive at runtime from `sys.prefix`
 
 ---
 
-## Phase 3 — Consolidate duplicated code
+## Phase 3 — Consolidate duplicated code ✅ DONE
 
 **3a. `olympus/event_generation/detector.py` vs `prometheus/detector/`**
 The five geometry builder functions (`make_line`, `make_grid`, `make_hex_grid`,
