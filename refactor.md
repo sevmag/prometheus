@@ -386,7 +386,7 @@ P-ONE model files is the correct behaviour and requires no code change.
 
 ---
 
-## Phase 7 — Eliminate distrax and dm-haiku
+## Phase 7 — Eliminate distrax and dm-haiku ✅ DONE
 
 These two libraries are currently blocking numpy ≥ 2, newer JAX, and ultimately
 Python 3.13 support. Both are used **only** in
