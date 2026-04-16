@@ -128,7 +128,7 @@ overlapping track/cylinder geometry helpers. Move any unique olympus helpers int
 
 ---
 
-## Phase 4 — Config system cleanup
+## Phase 4 — Config system cleanup ✅ DONE
 
 **4a. Remove runtime state from the config dict**
 `prometheus.py` currently injects
@@ -148,7 +148,7 @@ downstream `KeyError`s with clear messages.
 
 ---
 
-## Phase 4b — Typed configuration objects
+## Phase 4b — Typed configuration objects ✅ DONE
 
 The current config system is a nested `dict` built in `config.py` and passed everywhere
 by reference. The problems that arise from this are well-known: unknown keys are silently
@@ -192,7 +192,7 @@ the new layout reflects the cleaned-up config structure.
 
 ---
 
-## Phase 5 — Fold olympus into prometheus
+## Phase 5 — Fold olympus into prometheus ✅ DONE
 
 Olympus is only ever called through `OlympusPhotonPropagator`. It has no separate
 user-facing API and no reason to be an independent top-level package. Folding it in
@@ -254,7 +254,7 @@ implement.
 
 ---
 
-## Phase 5b — Particle test isolation (`clone()`)
+## Phase 5b — Particle test isolation (`clone()`) ✅ DONE
 
 `Particle` objects are mutated throughout the pipeline: `.hits`, `.children` and
 `.losses` are set in-place on the same object that is passed through lepton
@@ -283,7 +283,7 @@ snapshots — design that decision when the test suite is mature enough to valid
 
 ---
 
-## Phase 6 — Water medium model
+## Phase 6 — Water medium model ✅ DONE
 
 ### How new water models are added (current infrastructure)
 
@@ -341,6 +341,48 @@ Warning: No dedicated optical model is registered for medium 'ARCA'.
 This preserves the current behaviour (use P-ONE as default) while making it visible.
 As new registered media are added (Mediterranean for ARCA/ORCA, Baikal for GVD) the
 warning disappears automatically for those detectors.
+
+### Flow model selection (prerequisite for multi-medium support)
+
+`OlympusPhotonPropagator` loads two pickle files at construction time — the
+normalizing-flow weight file (`flow`) and the binned-count weight file (`counts`).
+These files live under `config.photon_propagator.olympus.paths.location` and their
+names are currently hardcoded as the P-ONE model trained on Cascadia Basin water.
+When model files for additional media are trained and committed to
+`resources/olympus_resources/`, prometheus needs a way to select the correct pair
+automatically.
+
+The mechanism mirrors `_WATER_MEDIUM_MAP` already in
+`prometheus/photon_propagation/olympus_photon_propagator.py`:
+
+```python
+# Add when additional model files exist in resources/olympus_resources/
+_FLOW_MODEL_MAP: dict[str, tuple[str, str]] = {
+    "pone": (
+        "photon_arrival_time_nflow_params.pickle",
+        "photon_arrival_time_counts_params.pickle",
+    ),
+    # "antares": (
+    #     "antares_nflow_params.pickle",
+    #     "antares_counts_params.pickle",
+    # ),
+}
+```
+
+`__init__` then resolves:
+
+```python
+flow_file, counts_file = _FLOW_MODEL_MAP.get(medium_key, _FLOW_MODEL_MAP["pone"])
+```
+
+If the user explicitly sets `config.photon_propagator.olympus.paths.flow` (and
+`.counts`) in their YAML those values override the auto-selection, so the existing
+config knobs continue to work as escape hatches. A `UserWarning` is emitted when the
+auto-selected model is a fallback (same pattern as the medium fallback warning).
+
+**Prerequisite for Phase 7**: `_FLOW_MODEL_MAP` should be wired in at the same time
+as any new model files are trained and committed. Until then, the fallback to the
+P-ONE model files is the correct behaviour and requires no code change.
 
 ---
 
