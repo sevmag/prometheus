@@ -475,7 +475,7 @@ sufficient coverage to validate the NF output.
 
 ---
 
-## Phase 8 — Dependency modernization
+## Phase 8 — Dependency modernization ✅ DONE
 
 With distrax and haiku removed (Phase 7), the following pins can be relaxed:
 
@@ -491,12 +491,12 @@ With distrax and haiku removed (Phase 7), the following pins can be relaxed:
 
 ---
 
-## Phase 9 — Minor cleanup
+## Phase 9 — Minor cleanup (IN PROGRESS)
 
 Lower risk, high readability gain. Can be done incrementally alongside other phases.
 
 - **Logging infrastructure.** Replace all `print()` calls with the standard
-  `logging` module. Add a `run: verbosity: WARNING` config key (default `WARNING`).
+   `logging` module. Add a `run: verbosity: WARNING` config key (default `WARNING`).
   `Prometheus.__init__` calls `logging.basicConfig(level=config["run"]["verbosity"])`
   once. The ~20 scattered `print()` calls throughout `prometheus.py`, `config_mims.py`,
   and the photon propagators become `logger.debug(...)` or `logger.info(...)` as
