@@ -10,6 +10,7 @@ IMPORTANT: These reference values should NOT be changed unless there is a
 deliberate update to the physics parametrization or bug fix.
 """
 import json
+from pathlib import Path
 import os
 
 import numpy as np
@@ -428,7 +429,7 @@ def save_reference_values(filename="tests/reference_values_v1.3.4.json"):
 
 def load_reference_values(filename="tests/reference_values_v1.3.4.json"):
     """Load reference values from file."""
-    if os.path.exists(filename):
+    if Path(filename).exists():
         with open(filename, "r") as f:
             return json.load(f)
     return None

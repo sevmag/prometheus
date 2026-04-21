@@ -491,7 +491,7 @@ With distrax and haiku removed (Phase 7), the following pins can be relaxed:
 
 ---
 
-## Phase 9 — Minor cleanup (IN PROGRESS)
+## Phase 9 — Minor cleanup ✅ DONE
 
 Lower risk, high readability gain. Can be done incrementally alongside other phases.
 
