@@ -13,7 +13,7 @@ Prometheus relies on several scientific software components that can be difficul
 To simplify this, we provide an **automated installer** that sets up everything for you.
 
 !!! tip
-If you are unsure which method to use, we recommend starting with the installer on Linux, or using containers on macOS/Windows.
+  If you are unsure which method to use, we recommend starting with the installer on Linux, or using containers on macOS/Windows.
 
 ---
 
@@ -26,8 +26,8 @@ To install Prometheus, you will need:
 * `curl` (used by the installer to download dependencies)
 
 !!! note
-Native installation is only fully supported on Linux.
-On macOS and Windows, use containers instead.
+  Native installation is only fully supported on Linux.
+  On macOS and Windows, use containers instead.
 
 ---
 
@@ -60,7 +60,7 @@ bash install.sh --with-ppc
 ```
 
 !!! note
-The `--with-ppc` option requires a working C++ toolchain and is only supported on Linux.
+  The `--with-ppc` option requires a working C++ toolchain and is only supported on Linux.
 
 ---
 
@@ -79,7 +79,7 @@ The installer automatically:
   * **[ppc](https://github.com/icecube/ppc)** — photon propagation (ice simulations)
 
 !!! tip
-You do **not** need to install these dependencies manually.
+  You do **not** need to install these dependencies manually.
 
 ---
 
@@ -92,11 +92,11 @@ source scripts/activate.sh .prometheus_env
 ```
 
 !!! warning
-The environment **must be active** whenever you run Prometheus.
-If it is not activated, commands like `python examples/...` may fail or use the wrong dependencies.
+  The environment **must be active** whenever you run Prometheus.
+  If it is not activated, commands like `python examples/...` may fail or use the wrong dependencies.
 
 !!! note
-You need to run this command in every new terminal session, unless you add it to your shell profile (`~/.bashrc` or `~/.zshrc`).
+  You need to run this command in every new terminal session, unless you add it to your shell profile (`~/.bashrc` or `~/.zshrc`).
 
 ---
 
@@ -111,7 +111,7 @@ python examples/01_basic_water.py
 If successful, you should see simulation output without errors.
 
 !!! tip
-If you encounter errors, first check that the environment is active before troubleshooting further.
+  If you encounter errors, first check that the environment is active before troubleshooting further.
 
 ---
 
@@ -142,5 +142,4 @@ pip install uproot
 pip install pandas
 ```
 
-If problems persist, see:
-👉 https://github.com/Harvard-Neutrino/prometheus/discussions
+If problems persist, see: 👉 [Discussions](https://github.com/Harvard-Neutrino/prometheus/discussions)
