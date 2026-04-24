@@ -34,8 +34,8 @@ What the installer does
 1. Download a suitable `micromamba` binary for your OS and architecture.
 2. Create a self-contained conda environment at `.prometheus_env/` using
      `environment.yml`.
-3. Install optional native dependencies (PROPOSAL, LeptonInjector, PPC) as
-     requested. Use `--with-ppc` to build the ice photon-propagator (Linux only).
+3. Install optional native dependencies (PROPOSAL, LeptonInjector, ppc) as
+    requested. Use `--with-ppc` to build the ice photon-propagator (Linux only).
 4. Install the `prometheus` package in editable mode and fetch `fennel-seed`
      as needed.
 
@@ -58,7 +58,7 @@ Try the small example scripts to verify your installation:
 
 ```bash
 python examples/01_basic_water.py    # water-mode example (JAX)
-python examples/02_basic_ice.py      # ice-mode example (PPC, Linux only)
+python examples/02_basic_ice.py      # ice-mode example (ppc, Linux only)
 ```
 
 Supported platforms and notes
@@ -80,7 +80,7 @@ Known limitations
 
 - macOS / Windows: build failures for PROPOSAL and LeptonInjector; use the
     container images instead.
-- PPC (ice photon-propagator) requires `--with-ppc` during install and is only
+- ppc (ice photon-propagator) requires `--with-ppc` during install and is only
     supported on Linux.
 - GENIE and some analysis utilities require optional Python packages (e.g.
     `uproot`, `pandas`). See `refactor.md` for more details.
