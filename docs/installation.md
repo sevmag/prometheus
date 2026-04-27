@@ -1,145 +1,130 @@
-# Installation {#installation}
+# Installation
 
-This page describes how to install **Prometheus** using the built-in installer.
+To work with Prometheus, you will need:
 
-If you prefer a pre-configured environment (recommended for macOS, Windows, or clusters), see:
-👉 [Container Installation](containers.md)
+- [Python](https://realpython.com/installing-python/) 3.11 or higher
+- [pip](https://pip.pypa.io/en/stable/installation/) for Python package management. It usually comes with installing Python, so you should already have it.
 
----
+Additional prerequisites depend on the installation method you choose.
 
-## Before You Start {#before-you-start}
+## Install from Source
 
-Prometheus relies on several scientific software components that can be difficult to build manually.
-To simplify this, we provide an **automated installer** that sets up everything for you.
+If you have Python and pip installed, you can install Prometheus with all dependencies from source.
+
+To start, clone this repository onto your machine:
+
+```sh
+git clone git@github.com:Harvard-Neutrino/prometheus.git
+```
+
+### Prerequisites
+
+To work with Prometheus, you need to install the following packages:
+
+1. **[LeptonInjector](https://github.com/icecube/LeptonInjector)** - Required for selecting neutrino interaction quantities. Installation instructions are available in the [project repository](https://github.com/icecube/LeptonInjector?tab=readme-ov-file#download-compilation-and-installation).
+
+2. **[PROPOSAL](https://github.com/tudo-astroparticlephysics/PROPOSAL)** - Used to propagate charged leptons resulting from neutrino interactions. PROPOSAL installation is included in the Prometheus setup script, but some users reported issues on certain operating systems. If needed, you can install it separately, following its [installation guide](https://github.com/tudo-astroparticlephysics/PROPOSAL/blob/master/INSTALL.md).
+
+3. **[Photon Propagation Code (ppc)](https://github.com/icecube/ppc)** - Required for ice-based detector simulations. We use a mod  ified version of the official ppc code. Prometheus-specific compilation instructions are available in the [ppc executables directory](https://github.com/Harvard-Neutrino/prometheus/tree/main/resources/PPC_executables) of the Prometheus GitHub repository.
+
+4. **[LeptonWeighter](https://github.com/icecube/LeptonWeighter)** (optional) - Required for event weighting. Installation instructions are available in the [project repository](https://github.com/icecube/LeptonWeighter?tab=readme-ov-file#installation).
+
+### Compile
+
+After installing the prerequisites, run the setup script from the Prometheus base directory:
+
+```sh
+python3 python -m pip setup.py install
+```
+
+This will install all remaining dependencies needed to run simulations.
 
 !!! tip
-  If you are unsure which method to use, we recommend starting with the installer on Linux, or using containers on macOS/Windows.
+    If you encounter issues installing PROPOSAL through the setup script, install it separately before running the script. See PROPOSAL's [advanced installation guide](https://github.com/tudo-astroparticlephysics/PROPOSAL/blob/master/INSTALL.md) for instructions.
 
----
+## Install with Containers
 
-## Requirements {#requirements}
+If you need to run simulations on a computing cluster or the source installation doesn't work for you, Docker and Singularity images with all dependencies prebuilt are available in [this public Google drive folder](https://drive.google.com/drive/folders/1-PbSiZQr0n85g9PrhbHMeURDOA02QUSY?usp=sharing).
 
-To install Prometheus, you will need:
+!!! warning  
+    The Docker and Singularity images we provide are not currently compatible with ARM-based system architectures, which causes issues when running them on computers with Mac M-series chips. If you are a Mac user, consider [installing Prometheus from source](#install-from-source).
 
-* **[Python](https://realpython.com/installing-python/)** 3.11 or higher
-* A **POSIX-compatible shell** (Linux/macOS)
-* `curl` (used by the installer to download dependencies)
+### Using Docker
+
+If you need help getting started with Docker, see the [Docker documentation](https://docs.docker.com/desktop/). Here is the outline of the steps to set things up:
+
+1. **Load the image**
+
+Download the latest version `.tar.gz` file from the [Google Drive folder](https://drive.google.com/drive/folders/1Ok0czMhOd8S0N73oyPn5B2mFWp_D5gUx), navigate to the directory where you downloaded the file, and run:
+
+```sh
+docker load < prometheus_v_<VERSION>.tar.gz
+```
+
+Replace `<VERSION>` with the actual version number (e.g., `1_0_2`). This will load the image into Docker. To learn more about loading images and available options, refer to the [Docker documentation](https://docs.docker.com/reference/cli/docker/image/load/).
+
+2. **Run the container and launch a shell**
+
+```sh
+docker run -it prometheus_v_<VERSION>:latest sh
+```
+
+For more container running options, refer to the [Docker containers documentation](https://docs.docker.com/engine/containers/run/).
+
+#### GPU Support with Docker
+
+For GPU-accelerated simulations, you will need to build a custom Docker image from the GPU Dockerfile [provided in the repository](https://github.com/Harvard-Neutrino/prometheus/tree/main/container). After building and starting the image, compile ppc with GPU support by running `make gpu` in the [PPC_CUDA](https://github.com/Harvard-Neutrino/prometheus/tree/main/resources/PPC_executables/PPC_CUDA) directory within the container.
 
 !!! note
-  Native installation is only fully supported on Linux.
-  On macOS and Windows, use containers instead.
+    You may need to modify the architecture version in the ppc makefile to match your GPU hardware.
 
----
+### Using Singularity
 
-## Installation Steps {#steps}
+If you need help getting started with Singularity, see the [Singularity documentation](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html).
 
-### 1. Clone the Repository
+Singularity is particularly useful for running simulations on computing clusters. To use the Singularity container:
 
-```bash
-git clone https://github.com/Harvard-Neutrino/prometheus.git
+1. **Clone this repository**
+
+The Singularity setup is still under construction, and there may be issues running software using only the files in the container. To avoid these issues, clone the repository onto your machine and navigate into the project directory:
+
+```sh
+git clone git@github.com:Harvard-Neutrino/prometheus.git && cd ./prometheus
 ```
 
-```bash
-cd prometheus
-```
+2. **Download the container image**
 
----
-
-### 2. Run the Installer
-
-```bash
-bash install.sh
-```
-
-This installs the **water-based simulation mode**, which is the recommended starting point.
-
-To enable ice-based simulations:
-
-```bash
-bash install.sh --with-ppc
-```
+Download the latest version `.sif` file (currently v1.0.2) from the [Google Drive folder](https://drive.google.com/drive/folders/1oeI4yX_BjdStaDKzx_IsYURxSnuNY3vn)
 
 !!! note
-  The `--with-ppc` option requires a working C++ toolchain and is only supported on Linux.
+    We use [Boost](https://www.boost.org/) libraries for file structure management. Some systems with older kernels may not be compatible with newer Boost versions. If you encounter compatibility issues, use the `.sif` files with the "old" keyword: `prometheus_old_<VERSION>.sif`.
 
----
+3. **Launch a Singularity shell within the container**
 
-## What Gets Installed {#what-gets-installed}
-
-The installer automatically:
-
-* Creates an isolated environment in `.prometheus_env/`
-* Installs all Python dependencies
-* Builds required scientific libraries:
-
-  * **[PROPOSAL](https://github.com/tudo-astroparticlephysics/PROPOSAL)** — lepton propagation
-  * **[LeptonInjector](https://github.com/icecube/LeptonInjector)** — neutrino interaction generation
-* Optionally builds:
-
-  * **[ppc](https://github.com/icecube/ppc)** — photon propagation (ice simulations)
-
-!!! tip
-  You do **not** need to install these dependencies manually.
-
----
-
-## Activate the Environment {#activation}
-
-After installation, activate the environment:
-
-```bash
-source scripts/activate.sh .prometheus_env
+```sh
+singularity shell <FILENAME>.sif
 ```
 
-!!! warning
-  The environment **must be active** whenever you run Prometheus.
-  If it is not activated, commands like `python examples/...` may fail or use the wrong dependencies.
+Replace `<FILENAME>` with the actual name of your downloaded `.sif` file.
 
-!!! note
-  You need to run this command in every new terminal session, unless you add it to your shell profile (`~/.bashrc` or `~/.zshrc`).
+#### Source the Environment File
 
----
+The remaining setup steps and running the software should all be done within your container shell.
 
-## Verify the Installation {#verify}
+Before running simulations, you may need to source the environment file to ensure all dependencies load correctly:
 
-With the environment **activated**, run a simple example:
-
-```bash
-python examples/01_basic_water.py
+```sh
+source /opt/.bashrc
 ```
 
-If successful, you should see simulation output without errors.
+Once this is done, still in your container shell, navigate into the Prometheus directory:
 
-!!! tip
-  If you encounter errors, first check that the environment is active before troubleshooting further.
-
----
-
-## Supported Platforms {#platforms}
-
-| Platform      | Status          |
-| ------------- | --------------- |
-| Linux x86-64  | Fully supported |
-| Linux aarch64 | Supported       |
-| macOS         | Use containers  |
-| Windows       | Use containers  |
-| WSL2          | Supported       |
-
----
-
-## Troubleshooting {#troubleshooting}
-
-* **Build failures (PROPOSAL / LeptonInjector)**
-  → Use containers instead
-
-* **Missing optional Python packages**
-
-```bash
-pip install uproot
+```sh
+cd /home/myuser/prometheus
 ```
 
-```bash
-pip install pandas
-```
+After that, you should be able to start running simulation scripts.
 
-If problems persist, see: 👉 [Discussions](https://github.com/Harvard-Neutrino/prometheus/discussions)
+## Getting Help
+
+If you are having issues installing Prometheus, feel free to create [a discussion on GitHub](https://github.com/Harvard-Neutrino/prometheus/discussions) and we will get back to you as soon as we can.
