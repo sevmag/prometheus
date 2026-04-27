@@ -15,7 +15,7 @@ Functions
 Classes
 -------
 
-`IncompaticleFieldsError(fields1, fields2)`
+`IncompatibleFieldsError(fields1, fields2)`
 :   Raised when two awkward.Array cannot be combined because fields don't match
 
     ### Ancestors (in MRO)
