@@ -7,23 +7,28 @@ The [examples directory](https://github.com/Harvard-Neutrino/prometheus/tree/mai
 Recommended quick-start examples:
 
 - `examples/01_basic_water.py` — Minimal water-case example to validate an install.
-- `examples/02_basic_ice.py` — Minimal ice-case example (uses ppc) to validate an install with ppc.
+- `examples/02_basic_ice.py` — Minimal ice-case example (uses PPC) to validate an install with PPC.
 
-Run examples using the repository-local micromamba environment. First, activate it:
+Run examples using the repository-local micromamba environment. For a typical run:
+
+Activate
 
 ```sh
+# Activate the repo-local micromamba environment
 source scripts/activate.sh .prometheus_env
 ```
 
-Then run a water simulation:
+Run a water simulation
 
 ```sh
+# Run the water example
 python examples/01_basic_water.py
 ```
 
-Or an ice simulation:
+Run an ice simulation
 
 ```sh
+# Run the ice example
 python examples/02_basic_ice.py
 ```
 
