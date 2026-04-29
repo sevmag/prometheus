@@ -5,7 +5,7 @@ To work with Prometheus, you will need:
 - [Python](https://realpython.com/installing-python/) 3.11 or higher
 - [pip](https://pip.pypa.io/en/stable/installation/) for Python package management. It usually comes with installing Python, so you should already have it.
 
-Additional prerequisites depend on the installation method you choose.
+Additional prerequisites depend on the installation method you choose. 
 
 ## Install from Source
 
