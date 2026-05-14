@@ -2,7 +2,7 @@
 """05_genie_injection.py
 Example showing how to drive Prometheus with GENIE event data.
 
-Instead of running LeptonInjector, this example reads pre-generated GENIE
+Instead of running ``LeptonInjector``, this example reads pre-generated GENIE
 events from a gRooTracker ROOT file and feeds them into the Prometheus
 photon-propagation pipeline.
 
