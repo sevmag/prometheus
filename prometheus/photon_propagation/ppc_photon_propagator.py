@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import subprocess
 
 import numpy as np
@@ -77,8 +78,24 @@ def ppc_sim(particle: Particle, det: Detector, lp: LeptonPropagator, ppc_config:
         return
     serialize_to_f2k(particle, f2k_tmpfile)
     det.to_f2k(geo_tmpfile, serial_nos=[m.serial_no for m in det.modules])
+
+    ppc_tmpdir = ppc_config["paths"]["ppc_tmpdir"]
+
+    if det.needs_nextgen():
+        det.to_om_conf(os.path.join(ppc_tmpdir, "om.conf"))
+        det.to_om_map(os.path.join(ppc_tmpdir, "om.map"))
+        om_dirs_src = ppc_config["paths"].get("om_dirs", "")
+        if not om_dirs_src:
+            om_dirs_src = os.path.join(ppc_config["paths"]["ppctables"], "om.dirs")
+        if os.path.exists(om_dirs_src):
+            shutil.copy(om_dirs_src, os.path.join(ppc_tmpdir, "om.dirs"))
+        else:
+            logger.warning(
+                "om.dirs not found at %s; PPC nextgen mode requires this file", om_dirs_src
+            )
+
     tenv = os.environ.copy()
-    tenv["PPCTABLESDIR"] = ppc_config["paths"]["ppc_tmpdir"]
+    tenv["PPCTABLESDIR"] = ppc_tmpdir
 
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, env=tenv)
     process.wait()

@@ -525,7 +525,10 @@ class Prometheus(object):
 
         set_serialization_index(self.injection)
         json_config = json.dumps(config.to_dict())
-        test_arr = serialize_particles_to_awkward(self.detector, self.injection)
+        output_mode = config.photon_propagator.ppc.simulation.output_mode
+        test_arr = serialize_particles_to_awkward(
+            self.detector, self.injection, output_mode=output_mode
+        )
         if test_arr is not None:
             outarr = ak.Array(
                 {

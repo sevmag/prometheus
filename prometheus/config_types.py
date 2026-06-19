@@ -553,6 +553,7 @@ class PPCPathsConfig(ConfigBase):
     f2k_prefix: str = ""
     ppctables: str = "../resources/PPC_tables/south_pole/"
     ppc_exe: str = "../resources/PPC_executables/PPC/ppc"
+    om_dirs: str = ""  # path to om.dirs; empty = look in ppctables
 
 
 @dataclass
@@ -561,6 +562,14 @@ class PPCSimConfig(ConfigBase):
 
     device: int = 0
     supress_output: bool = True
+    output_mode: str = "minimal"  # "minimal", "standard", or "extended"
+
+    def __post_init__(self):
+        _valid = ("minimal", "standard", "extended")
+        if self.output_mode not in _valid:
+            raise ValueError(
+                f"output_mode must be one of {_valid!r}, got {self.output_mode!r}"
+            )
 
 
 @dataclass
