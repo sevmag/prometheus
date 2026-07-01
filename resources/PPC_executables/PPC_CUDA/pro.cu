@@ -43,6 +43,13 @@ void sincosf(float x, float * s, float * c){ *s = sin(x); *c = cos(x); }
 #endif
 #endif
 
+// Modern CUDA (>=9) removed the bare device intrinsic int_as_float in favour of
+// __int_as_float. Provide a GPU-side shim so pro.cu compiles under CUDA 12.x.
+// (The CPU build supplies its own int_as_float above, under XCPU.)
+#ifndef XCPU
+__device__ __forceinline__ float int_as_float(unsigned int x){ return __int_as_float(x); }
+#endif
+
 __device__ float xrnd(uint4 & s){
   unsigned int tmp;
   do{
