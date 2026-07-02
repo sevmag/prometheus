@@ -119,6 +119,31 @@ struct mesh{
 
 bool nextgen=false;
 
+// --- option-B water tabulated optics (gated; absent files => unchanged ICE behaviour) ---
+static vector<float> wl_s, scal_, wl_a, absl_;   // sca: wavelength[nm],L_sca[m]; abs: wavelength[nm],L_abs[m]
+static bool water_tab=false;
+// Mediterranean seawater refractive index (hyperion formula @ ANTARES S=38.44,T=13.1C,P=213bar)
+static const float WN_A01=1.32321f, WN_A2=16.2566f, WN_A3=-4382.0f, WN_A4=1.1455e6f;
+static float wtab_interp(const vector<float>& xs, const vector<float>& ys, float x){
+  int n=xs.size();
+  if(x<=xs[0]) return ys[0];
+  if(x>=xs[n-1]) return ys[n-1];
+  int lo=0, hi=n-1;
+  while(hi-lo>1){ int mid=(lo+hi)/2; if(xs[mid]<=x) lo=mid; else hi=mid; }
+  float t=(x-xs[lo])/(xs[hi]-xs[lo]);
+  return ys[lo]*(1-t)+ys[hi]*t;
+}
+static void load_water_tables(const string& dir){
+  ifstream fs((dir+"sca_len.dat").c_str()), fa((dir+"abs_len.dat").c_str());
+  if(fs.fail()||fa.fail()) return;   // ICE mode: no water tables present
+  float w,L;
+  while(fs>>w>>L){ wl_s.push_back(w); scal_.push_back(L); }
+  while(fa>>w>>L){ wl_a.push_back(w); absl_.push_back(L); }
+  if(wl_s.size()<2||wl_a.size()<2){ cerr<<"water optics tables too short"<<endl; exit(1); }
+  water_tab=true;
+  cerr<<"Loaded water optics: "<<wl_s.size()<<" sca, "<<wl_a.size()<<" abs points"<<endl;
+}
+
 struct itype{
   float area, beta, rde, fx, Rr, Rz, cable;
   vector< V<3> > dirs;
@@ -299,6 +324,7 @@ struct spec{
   }
 
   float np(float wv, float * ng = NULL){ // phase and group refrative indices
+    if(water_tab){ float x=1.e-3f/wv; if(ng!=NULL) *ng=WN_A01+x*(2*WN_A2+x*(3*WN_A3+x*4*WN_A4)); return WN_A01+x*(WN_A2+x*(WN_A3+x*WN_A4)); }
     float np=1.55749-wv*(1.57988-wv*(3.99993-wv*(4.68271-2.09354*wv)));
     if(ng!=NULL) *ng=np*(1+0.227106-wv*(0.954648-wv*(1.42568-0.711832*wv)));
     return np;
@@ -606,6 +632,7 @@ struct ini{
       if(env!=NULL) icedir=string(env)+"/";
       else icedir=ppcdir;
       cerr<<"Configuring icemodel in \""<<icedir<<"\""<<endl;
+      load_water_tables(icedir);   // option-B: enable tabulated water optics if sca_len.dat/abs_len.dat present
     }
 
     string tiltdir("");
@@ -1686,6 +1713,7 @@ struct ini{
 	  float bbl=bble>0?dp[j]<bblz&&dp[j]<bbly?bble*(1-dp[j]/bblz)*(1-dp[j]/bbly):0:0;
 	  float sca = (bbl+be[j]*l_a - ra[j]*d.sum*(srf+srw*l_a))/(1-d.g);
 	  float abs = (D*ba[j]+E)*l_k + (ABl-arf*AB0*l_k)*(1+0.01*td[j]);
+	  if(water_tab){ sca=1.f/wtab_interp(wl_s,scal_,wva); abs=1.f/wtab_interp(wl_a,absl_,wva); }
 	  if(sca>0 && abs>0) w.z[i].sca=sca, w.z[i].abs=abs;
 	  else{ cerr << "Invalid value of ice parameter, cannot proceed" << endl; exit(1); }
 	}
