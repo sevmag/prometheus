@@ -1721,6 +1721,7 @@ struct ini{
 	float ng, np=qwv.np(wva*1.e-3, &ng);
 	float c=0.299792458; d.ocv=1/c; w.wvl=n; w.ocm=ng/c;
 	w.coschr=1/np; w.sinchr=sqrt(1-w.coschr*w.coschr);
+		if(getenv("PPC_DUMP_OPTICS")) cerr<<"OPTICS "<<wva<<" "<<1/w.z[0].sca<<" "<<1/w.z[0].abs<<" "<<np<<endl; // inert diagnostic: wavelength_nm L_sca[m] L_abs[m] n
       }
     }
 
