@@ -51,7 +51,7 @@ def config_mims(config, detector) -> None:
     detector : Detector
         Detector being used for the simulation.
     """
-    if detector.medium.name == "WATER":
+    if detector.medium.name == "WATER" and config.photon_propagator.name is None:
         config.photon_propagator.name = "olympus"
     elif detector.medium.name == "ICE" and config.photon_propagator.name is None:
         config.photon_propagator.name = "PPC"
