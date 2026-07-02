@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import shutil
@@ -93,9 +94,20 @@ def ppc_sim(particle: Particle, det: Detector, lp: LeptonPropagator, ppc_config:
             logger.warning(
                 "om.dirs not found at %s; PPC nextgen mode requires this file", om_dirs_src
             )
+        # Stage the per-OM-type effective-area(QE)-vs-wavelength tables and the
+        # eff-f2k table. PPC drops ALL hits for a nextgen OM type whose om.wv_*
+        # file is missing, so these are mandatory in nextgen mode.
+        for src in glob.glob(os.path.join(ppc_config["paths"]["ppctables"], "om.wv_*")):
+            shutil.copy(src, os.path.join(ppc_tmpdir, os.path.basename(src)))
+        eff = os.path.join(ppc_config["paths"]["ppctables"], "eff-f2k")
+        if os.path.exists(eff):
+            shutil.copy(eff, os.path.join(ppc_tmpdir, "eff-f2k"))
 
     tenv = os.environ.copy()
     tenv["PPCTABLESDIR"] = ppc_tmpdir
+    # NEXTGENDIR defaults to PPCTABLESDIR in PPC, but since we stage tables into
+    # a per-run tmpdir it must be pointed there explicitly for nextgen mode.
+    tenv["NEXTGENDIR"] = ppc_tmpdir
 
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, env=tenv)
     process.wait()
