@@ -1,0 +1,17 @@
+# arca water: over-R, eff, HG(0), g, [aniso], [holeice], [aniso2], [absaniso]  -- BFR omitted => OFF
+5
+1.0
+0
+0.92
+130.0
+0.0
+0.0
+0.0
+0.03
+100
+0.0
+0.92
+0.0
+0.0
+0.0
+0.0
