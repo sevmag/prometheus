@@ -22,9 +22,13 @@ def parse_args():
     p.add_argument("--propagator", default="PPC", help="PPC (CPU) or PPC_CUDA (GPU)")
     p.add_argument("--ppc-exe", dest="ppc_exe", default=None,
                    help="override path to the ppc binary (else use the propagator's config default)")
+    p.add_argument("--ppctables", dest="ppctables", default=None,
+                   help="override path to the ppctables dir (else use the propagator's config default)")
     p.add_argument("--device", type=int, default=0,
                    help="ppc device index; the GPU id when --propagator PPC_CUDA")
     p.add_argument("--ranged", action="store_true", help="ranged injection (default: volume)")
+    p.add_argument("--show-ppc-stderr", dest="show_ppc_stderr", action="store_true",
+                   help="do not suppress PPC stderr (shows photons/hits per event; debugging)")
     return p.parse_args()
 
 
@@ -64,6 +68,10 @@ def main():
     pp_sub.paths.force = True
     if a.ppc_exe:
         pp_sub.paths.ppc_exe = a.ppc_exe
+    if a.ppctables:
+        pp_sub.paths.ppctables = a.ppctables
+    if a.show_ppc_stderr:
+        pp_sub.simulation.supress_output = False
     pp_sub.simulation.device = a.device
 
     Prometheus().sim()
