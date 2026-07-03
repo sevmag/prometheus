@@ -29,6 +29,10 @@ def parse_args():
     p.add_argument("--ranged", action="store_true", help="ranged injection (default: volume)")
     p.add_argument("--show-ppc-stderr", dest="show_ppc_stderr", action="store_true",
                    help="do not suppress PPC stderr (shows photons/hits per event; debugging)")
+    p.add_argument("--multipmt", action="store_true",
+                   help="build the multi-PMT ARCA detector (2070 DOMs x 31 PMT) instead of reading --geo")
+    p.add_argument("--output-mode", dest="output_mode", default=None,
+                   help="serializer output mode: minimal|standard|extended (extended adds pmt_id + hit positions)")
     return p.parse_args()
 
 
@@ -73,8 +77,16 @@ def main():
     if a.show_ppc_stderr:
         pp_sub.simulation.supress_output = False
     pp_sub.simulation.device = a.device
+    if a.output_mode:
+        pp_sub.simulation.output_mode = a.output_mode
 
-    Prometheus().sim()
+    if a.multipmt:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from build_arca_multipmt import build_arca_multipmt_detector
+        Prometheus(detector=build_arca_multipmt_detector()).sim()
+    else:
+        Prometheus().sim()
 
 
 if __name__ == "__main__":
