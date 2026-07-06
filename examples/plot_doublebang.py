@@ -4,19 +4,23 @@ Left  : every PMT-with-hits as a circle at its DOM position; size ~ log10(hits/P
         color ~ earliest hit time (red=earlier, violet=later) -> tau double-bang.
 Right : the busiest DOM's 31 PMTs on a sphere, showing WHICH PMTs fired and when
         (the directional multi-PMT information)."""
-import glob, numpy as np, pandas as pd
+import glob, os, numpy as np, pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 PR = "/n/holylfs05/LABS/arguelles_delgado_lab/Everyone/pzhelnin/prometheus"
-df = pd.read_parquet(sorted(glob.glob(PR + "/output/arca_multipmt_tau/*_photons.parquet"))[-1])
+# newest by mtime (not alphabetical glob[-1], which can grab a stale run)
+df = pd.read_parquet(max(glob.glob(PR + "/output/arca_multipmt_tau/*_photons.parquet"),
+                         key=os.path.getmtime))
 ZMIN, ZMAX, RXY = -3500.0, -2888.0, 500.0
 
 def hits(i):
     p = df["photons"].iloc[i]
+    # pmt_id is the real PMT index (0-30). NB: id_idx is NOT the PMT -- it is the
+    # producing particle's serialization index; using it here was the original bug.
     return tuple(np.asarray(p[k]) for k in
-                 ("sensor_pos_x","sensor_pos_y","sensor_pos_z","t","string_id","sensor_id","id_idx"))
+                 ("sensor_pos_x","sensor_pos_y","sensor_pos_z","t","string_id","sensor_id","pmt_id"))
 def inside(pt): return (ZMIN-50 < pt[2] < ZMAX+50) and abs(pt[0]) < RXY+50 and abs(pt[1]) < RXY+50
 
 # ---- select the clearest contained double-bang ----

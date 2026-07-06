@@ -525,7 +525,12 @@ class Prometheus(object):
 
         set_serialization_index(self.injection)
         json_config = json.dumps(config.to_dict())
-        output_mode = config.photon_propagator.ppc.simulation.output_mode
+        # Read output_mode from the ACTIVE propagator sub-config. PPC_CUDA
+        # stores its settings under `.ppc_cuda`, PPC (CPU) under `.ppc`. Reading
+        # `.ppc` unconditionally silently ignored `--output-mode` for GPU runs,
+        # dropping pmt_id / per-hit angles / hit positions from the output.
+        _pp_key = "ppc_cuda" if str(getattr(config.photon_propagator, "name", "")).upper() == "PPC_CUDA" else "ppc"
+        output_mode = getattr(config.photon_propagator, _pp_key).simulation.output_mode
         test_arr = serialize_particles_to_awkward(
             self.detector, self.injection, output_mode=output_mode
         )
