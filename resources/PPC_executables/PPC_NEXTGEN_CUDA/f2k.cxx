@@ -9,7 +9,7 @@ float grnd(){  // gaussian distribution
   return sqrtf(-2*logf(xrnd()))*sinf(2*FPI*xrnd());
 }
 
-static const float rho=0.9216f;      // density of ice [mwe]
+// rho (medium density, g/cm^3) is defined in ini.cxx and set per-medium from cfg.txt.
 static const float m0=0.105658389f;  // muon rest mass [GeV]
 
 photon p, pfl;
@@ -65,6 +65,13 @@ float yield(float E, float dr, int type){
       p.a=0, p.b=0;
     }
     else{  // cascades
+      // The cascade fits below are the aachen/Radel-Wiebusch Geant4 parametrization derived in
+      // ice (icecube/201210001). The two first-order medium effects are corrected outside the
+      // coefficients: density enters via rho (light ~ 1/rho, since physical track length =
+      // grammage/density) and the refractive index enters the per-length yield via cherenkov(np).
+      // The coefficients themselves are tabulated at ice's Cherenkov threshold; a seawater
+      // re-derivation would shift them by a few percent but needs new Geant4 input and has no
+      // ground truth (olympus/fennel reuse these same ice fits, rescaling only n and density).
       const float Lrad=0.39652*0.910f/rho;
       const float em=5.321*0.910f/rho;  // 0.910 density used in simulation
 

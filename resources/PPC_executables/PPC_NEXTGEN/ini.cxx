@@ -3,6 +3,10 @@
 
 #define CTX  11
 #define CTY  10
+// Rhomboid broad-phase grid axes, tuned to IceCube's 120-deg hex string lattice (paired with the
+// ~125 m cell spacing in the cn[] setup). The d.rx guard band keeps photon->string lookup correct
+// for any geometry, so a non-hexagonal array (e.g. ARCA water) runs correctly as-is but could gain
+// speed from a matched basis/spacing (e.g. orthogonal 0/90 axes at the true string pitch).
 #define DIR1 9.3f
 #define DIR2 129.3f
 
@@ -44,10 +48,17 @@ struct DOM{
   float r[3];
 };
 
+// Set true by load_water_tables() when seawater optics tables are present; gates water-mode
+// behavior. Declared here (ahead of the option-B block below) so isinice() can consult it.
+static bool water_tab=false;
+
 struct ikey{
   int str, dom;
 
   bool isinice() const{
+    // KM3NeT/ARCA geometries are 0-based (strings and DOMs from 0) with no IceTop; the IceCube
+    // filter (in-ice DOMs 1-60, or Gen2 strings >86) would silently drop string 0 and DOM 0.
+    if(water_tab) return str>=0 && dom>=0;
     return str>86 || (str>0 && dom>=1 && dom<=60);
   }
 
@@ -121,9 +132,14 @@ bool nextgen=false;
 
 // --- option-B water tabulated optics (gated; absent files => unchanged ICE behaviour) ---
 static vector<float> wl_s, scal_, wl_a, absl_;   // sca: wavelength[nm],L_sca[m]; abs: wavelength[nm],L_abs[m]
-static bool water_tab=false;
 // Mediterranean seawater refractive index (hyperion formula @ ANTARES S=38.44,T=13.1C,P=213bar)
 static const float WN_A01=1.32321f, WN_A2=16.2566f, WN_A3=-4382.0f, WN_A4=1.1455e6f;
+// Medium density [g/cm^3] governing cascade/secondary light yield (yield scales as 1/rho,
+// since a cascade's physical track length = fixed grammage / density). rho is assigned per medium
+// during the (mandatory) cfg parse (water: cfg.txt v[16]; ice: RHO_ICE) and is not read before
+// then; f2k.cxx (included later in this TU) consumes it at event time.
+static const float RHO_ICE=0.9216f;
+static float rho;
 static float wtab_interp(const vector<float>& xs, const vector<float>& ys, float x){
   int n=xs.size();
   if(x<=xs[0]) return ys[0];
@@ -675,6 +691,13 @@ struct ini{
 	  q.eff=v[1], d.sf=v[2], d.g=v[3]; d.gr=(1-d.g)/(1+d.g);
 	  cerr<<"Configured: xR="<<xR<<" eff="<<q.eff<<" sf="<<d.sf<<" g="<<d.g<<endl;
 
+	  if(water_tab){
+	    if(v.size()<17){ cerr<<"Error: water mode requires a medium density in cfg.txt (v[16])"<<endl; exit(1); }
+	    rho=v[16];
+	    cerr<<"Water medium density rho="<<rho<<" g/cm^3"<<endl;
+	  }
+	  else rho=RHO_ICE;
+
 	  if(v.size()<12) d.SF=d.sf, d.G=d.g, d.GR=d.gr;
 	  else d.SF=v[10], d.G=v[11], d.GR=(1-d.G)/(1+d.G);
 
@@ -717,7 +740,8 @@ struct ini{
 	  }
 	  else d.fr=1;
 
-	  if(v.size()>=28){
+	  // BFR is glacial-ice birefringence; mutually exclusive with water mode, where v[16] is density.
+	  if(!water_tab && v.size()>=28){
 	    for(int i=0; i<12; i++) d.bfr[i]=v[16+i];
 
 	    {

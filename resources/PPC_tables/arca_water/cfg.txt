@@ -15,3 +15,5 @@
 0.0
 0.0
 0.0
+# seawater density [g/cm^3], water mode only (read as v[16] when sca_len/abs_len present)
+1.04
