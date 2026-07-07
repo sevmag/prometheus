@@ -742,6 +742,10 @@ struct ini{
 	  }
 	  else d.fr=1;
 
+	  if(water_tab){ // seawater is optically isotropic: force off ice optical anisotropy
+	    d.azx=1, d.azy=0; d.k1=1, d.k2=1, d.kz=1; d.fr=0;  // k=1 -> identity; fr=0 -> skip az term
+	  }
+
 	  // BFR is glacial-ice birefringence; mutually exclusive with water mode, where v[16] is density.
 	  if(!water_tab && v.size()>=28){
 	    for(int i=0; i<12; i++) d.bfr[i]=v[16+i];
@@ -1631,8 +1635,8 @@ struct ini{
 
       for(int i=0; i<size; i++){
 	int j=size-1-i;
-	d.az[i].k1=k1[j]; d.az[i].k2=k2[j];
-	d.az[i].ra=ra[j]; d.az[i].rb=ra[j]*rb[j];
+	if(water_tab){ d.az[i].k1=1; d.az[i].k2=1; d.az[i].ra=0; d.az[i].rb=0; }  // seawater: no ice-layer anisotropy
+	else { d.az[i].k1=k1[j]; d.az[i].k2=k2[j]; d.az[i].ra=ra[j]; d.az[i].rb=ra[j]*rb[j]; }
       }
 
       float arf=0;
