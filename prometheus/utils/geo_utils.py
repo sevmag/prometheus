@@ -55,7 +55,9 @@ def from_geo(fname):
     return pos_out, keys, medium
 
 
-def geo_from_coords(coords, out_path, tol=0.5, medium="ice", dom_radius=30):
+def geo_from_coords(
+    coords, out_path, tol=0.5, medium="ice", dom_radius=30, dom_vertical_radius=None
+):
     """Generate a detector geometry file from an array of module coordinates.
 
     Parameters
@@ -69,7 +71,11 @@ def geo_from_coords(coords, out_path, tol=0.5, medium="ice", dom_radius=30):
     medium : str, optional
         Medium in which the detector is embedded.
     dom_radius : float, optional
-        DOM radius in centimeters.
+        DOM radial semi-axis in centimeters.
+    dom_vertical_radius : float, optional
+        DOM vertical semi-axis in centimeters, for an elongated (WOM-style)
+        module. Omitted from the file when None, which the reader treats as a
+        sphere (Rz = Rr).
     """
     coord_list = list(list(a) for a in coords)
     coord_list.sort()
@@ -90,16 +96,17 @@ def geo_from_coords(coords, out_path, tol=0.5, medium="ice", dom_radius=30):
 
     with open(out_path, "w") as geo_out:
         # Write metadata
-        geo_out.write(
-            f"### Metadata ###\nMedium:\t{medium}\n"
-            f"DOM Radius [cm]:\t{dom_radius}\n### Modules ###\n"
-        )
+        header = f"### Metadata ###\nMedium:\t{medium}\nDOM Radius [cm]:\t{dom_radius}\n"
+        if dom_vertical_radius is not None:
+            header += f"DOM Vertical Radius [cm]:\t{dom_vertical_radius}\n"
+        header += "### Modules ###\n"
+        geo_out.write(header)
         # Write coords
         for coord in coord_list:
             geo_out.write(f"{coord[0]}\t{coord[1]}\t{coord[2]}\t{coord[3]}\t{coord[4]}\n")
 
 
-def geo_from_f2k(fname, out_path, medium="ice", dom_radius=30):
+def geo_from_f2k(fname, out_path, medium="ice", dom_radius=30, dom_vertical_radius=None):
     """Generate a detector geo file from an f2k file.
 
     Parameters
@@ -111,14 +118,19 @@ def geo_from_f2k(fname, out_path, medium="ice", dom_radius=30):
     medium : str, optional
         Medium in which the detector is embedded.
     dom_radius : float, optional
-        DOM radius in centimeters.
+        DOM radial semi-axis in centimeters.
+    dom_vertical_radius : float, optional
+        DOM vertical semi-axis in centimeters, for an elongated (WOM-style)
+        module. Omitted from the file when None, which the reader treats as a
+        sphere (Rz = Rr).
     """
     positions, keys, sers = from_f2k(fname)
     with open(out_path, "w") as geo_out:
-        geo_out.write(
-            f"### Metadata ###\nMedium:\t{medium}\n"
-            f"DOM Radius [cm]:\t{dom_radius}\n### Modules ###\n"
-        )
+        header = f"### Metadata ###\nMedium:\t{medium}\nDOM Radius [cm]:\t{dom_radius}\n"
+        if dom_vertical_radius is not None:
+            header += f"DOM Vertical Radius [cm]:\t{dom_vertical_radius}\n"
+        header += "### Modules ###\n"
+        geo_out.write(header)
         for pos, key in zip(positions, keys):
             geo_out.write(f"{pos[0]}\t{pos[1]}\t{pos[2]}\t{key[0]}\t{key[1]}\n")
 

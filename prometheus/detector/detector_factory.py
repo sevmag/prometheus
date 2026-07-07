@@ -70,14 +70,30 @@ def read_medium(geofile) -> Union[Medium, None]:
     return getattr(Medium, medium_string)
 
 
-def read_dom_radius(geofile) -> Union[float, None]:
-    """Read the DOM radius from a geofile header.
+def _read_geo_length(geofile, key: str) -> Union[float, None]:
+    """Read a ``<key> [cm]:`` length line from a geofile header, in metres.
 
-    The geofile metadata may carry a ``DOM Radius [cm]`` line. PPC's nextgen mode
-    needs this radius (as the module semi-axes written to ``om.conf``), so reading
-    it here lets the geofile be the single source of truth instead of a hardcoded
-    constant. Returns metres, or ``None`` when the header omits it so callers keep
-    their own default.
+    Scans only the metadata block (stops at ``### Modules ###``). Returns ``None``
+    when the line is absent so callers can keep their own default. ``key`` is
+    matched case-insensitively as a line prefix.
+    """
+    key = key.lower()
+    with open(geofile) as geo_in:
+        for line in geo_in:
+            if line.lower().startswith(key):
+                return float(line.split()[-1]) / 100.0
+            if line.startswith("### Modules ###"):
+                break
+    return None
+
+
+def read_dom_radius(geofile) -> Union[float, None]:
+    """Read the DOM radial semi-axis (Rr) from a geofile's ``DOM Radius [cm]`` header.
+
+    PPC's nextgen mode needs this radius (as the module semi-axes written to
+    ``om.conf``), so reading it here lets the geofile be the single source of truth
+    instead of a hardcoded constant. Returns metres, or ``None`` when the header
+    omits it so callers keep their own default.
 
     Parameters
     ----------
@@ -87,15 +103,33 @@ def read_dom_radius(geofile) -> Union[float, None]:
     Returns
     -------
     radius : float or None
-        DOM radius in metres, or None if the header has no ``DOM Radius`` line.
+        DOM radial semi-axis in metres, or None if the header has no
+        ``DOM Radius`` line.
     """
-    with open(geofile) as geo_in:
-        for line in geo_in:
-            if line.lower().startswith("dom radius"):
-                return float(line.split()[-1]) / 100.0
-            if line.startswith("### Modules ###"):
-                break
-    return None
+    return _read_geo_length(geofile, "dom radius")
+
+
+def read_dom_vertical_radius(geofile) -> Union[float, None]:
+    """Read the DOM vertical semi-axis (Rz) from a geofile's optional
+    ``DOM Vertical Radius [cm]`` header.
+
+    A single ``DOM Radius`` describes only a sphere; this optional second field
+    lets a geofile describe an elongated (WOM-style) module where Rz != Rr.
+    Returns metres, or ``None`` when the line is absent — callers treat that as a
+    sphere (Rz = Rr).
+
+    Parameters
+    ----------
+    geofile : str
+        Detector geofile path.
+
+    Returns
+    -------
+    radius : float or None
+        DOM vertical semi-axis in metres, or None if the header has no
+        ``DOM Vertical Radius`` line.
+    """
+    return _read_geo_length(geofile, "dom vertical radius")
 
 
 def detector_from_geo(geofile: str, efficiency: float = 0.2, noise_rate: float = 1) -> Detector:
