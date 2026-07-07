@@ -519,6 +519,7 @@ struct dats{
   float dh, rdh, hmin; // step, 1/step, and min depth
 
   float ocv;  // 1 / speed of light in vacuum
+  float mdens;  // medium density [g/cm^3] for device-side muon dE/dx (copy of rho)
   float sf;   // scattering function: 0=HG; 1=SAM
   float g, gr; // g=<cos(scattering angle)> and gr=(1-g)/(1+g)
 
@@ -697,6 +698,7 @@ struct ini{
 	    cerr<<"Water medium density rho="<<rho<<" g/cm^3"<<endl;
 	  }
 	  else rho=RHO_ICE;
+	  d.mdens=rho;  /* publish density to the device-uploaded dats (muon dE/dx) */
 
 	  if(v.size()<12) d.SF=d.sf, d.G=d.g, d.GR=d.gr;
 	  else d.SF=v[10], d.G=v[11], d.GR=(1-d.G)/(1+d.G);

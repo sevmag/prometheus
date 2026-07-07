@@ -454,7 +454,7 @@ __global__ void propagate(dats * ed, unsigned int num){
 	else{
 	  float beta=p.beta;
 	  if(p.type<0){ // muon end point; assuming p.beta=1
-	    const float ar=0.26f*0.9216f/0.105658389f;  // a [GeV/mwe] * density [mwe/m] / muon rest mass [GeV]
+	    const float ar=0.26f*e.mdens/0.105658389f;  // a [GeV/mwe] * density [mwe/m] / muon rest mass [GeV]
 	    float dx=ar*(p.n.w-l);
 	    beta=sqrtf(dx*(2+dx))/(1+dx);
 	    if(beta>=cs) r.w-=e.ocv*(sqrtf(dx*dx+1)-asinhf(1/dx)-dx)/ar;
