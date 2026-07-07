@@ -11,7 +11,7 @@ import os
 import numpy as np
 
 from prometheus.detector.detector import Detector
-from prometheus.detector.detector_factory import read_medium
+from prometheus.detector.detector_factory import read_dom_radius, read_medium
 from prometheus.detector.module import Module
 
 PR = "/n/holylfs05/LABS/arguelles_delgado_lab/Everyone/pzhelnin/prometheus"
@@ -33,7 +33,7 @@ def _load_pmt_dirs(path=DIRS):
 
 
 def build_arca_multipmt_detector(
-    geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=0.49, area=1.0
+    geo=GEO, module_type=1, Rr=None, Rz=None, beta=0.49, area=1.0
 ):
     """Build the 2070-DOM, 31-PMT-per-DOM ARCA nextgen detector.
 
@@ -44,8 +44,9 @@ def build_arca_multipmt_detector(
     module_type : int
         Shared PPC om.conf type ID for every DOM. Must not be -1 so that the
         detector is flagged as nextgen.
-    Rr, Rz : float
-        Module semi-axes [m]. Default 0.2159 = 17" DOM sphere radius.
+    Rr, Rz : float, optional
+        Module semi-axes [m]. Default: read from the geofile's ``DOM Radius``
+        header, falling back to 0.2159 m (17" DOM sphere) when it is absent.
     beta : float
         PMT angular sensitivity shape parameter.
     area : float
@@ -58,6 +59,12 @@ def build_arca_multipmt_detector(
     """
     pmt_dirs = _load_pmt_dirs()
     medium = read_medium(geo)
+    if Rr is None or Rz is None:
+        geo_radius = read_dom_radius(geo)
+        if geo_radius is None:
+            geo_radius = 0.2159  # 17" KM3NeT DOM sphere
+        Rr = geo_radius if Rr is None else Rr
+        Rz = geo_radius if Rz is None else Rz
     lines = open(geo).readlines()
     start = lines.index("### Modules ###\n") + 1
     modules = []

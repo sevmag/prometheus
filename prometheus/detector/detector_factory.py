@@ -70,6 +70,34 @@ def read_medium(geofile) -> Union[Medium, None]:
     return getattr(Medium, medium_string)
 
 
+def read_dom_radius(geofile) -> Union[float, None]:
+    """Read the DOM radius from a geofile header.
+
+    The geofile metadata may carry a ``DOM Radius [cm]`` line. PPC's nextgen mode
+    needs this radius (as the module semi-axes written to ``om.conf``), so reading
+    it here lets the geofile be the single source of truth instead of a hardcoded
+    constant. Returns metres, or ``None`` when the header omits it so callers keep
+    their own default.
+
+    Parameters
+    ----------
+    geofile : str
+        Detector geofile path.
+
+    Returns
+    -------
+    radius : float or None
+        DOM radius in metres, or None if the header has no ``DOM Radius`` line.
+    """
+    with open(geofile) as geo_in:
+        for line in geo_in:
+            if line.lower().startswith("dom radius"):
+                return float(line.split()[-1]) / 100.0
+            if line.startswith("### Modules ###"):
+                break
+    return None
+
+
 def detector_from_geo(geofile: str, efficiency: float = 0.2, noise_rate: float = 1) -> Detector:
     """Build a detector from a Prometheus geofile.
 
