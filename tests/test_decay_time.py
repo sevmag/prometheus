@@ -26,13 +26,14 @@ def _particle(time=0.0, pdg=15):
 
 
 class TestParticleTimeField:
-    def test_defaults_to_zero(self):
-        assert _particle().time == 0.0
+    def test_time_is_required(self):
+        # `time` has no default: omitting it must fail loud, not silently
+        # restart the clock at 0 (the Issue #4 bug class).
+        with pytest.raises(TypeError):
+            PropagatableParticle(15, 1e3, np.zeros(3), _DIR_Z, 0, None)
 
-    def test_positional_construction_unaffected(self):
-        # `time` is keyword-only, so the existing positional call still works.
-        p = PropagatableParticle(15, 1e3, np.zeros(3), _DIR_Z, 0, None)
-        assert p.time == 0.0
+    def test_time_is_stored(self):
+        assert _particle(time=1633.0).time == pytest.approx(1633.0)
 
 
 class TestLossTiming:
@@ -59,7 +60,7 @@ class TestLossTiming:
         offset = 1633.0
         parent = _particle(time=0.0)
         child = PropagatableParticle(11, 500.0, np.zeros(3), _DIR_Z, 0, parent, time=offset)
-        child.losses.append(Loss(11, 500.0, np.array([0.0, 0.0, 150.0])))
+        child.losses.append(Loss(-2000001006, 500.0, np.array([0.0, 0.0, 150.0])))
         parent.children.append(child)
         out = tmp_path / "family.f2k"
         serialize_to_f2k(parent, str(out))
