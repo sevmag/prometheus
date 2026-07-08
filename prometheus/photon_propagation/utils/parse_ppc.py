@@ -58,11 +58,8 @@ def parse_ppc(ppc_file: str) -> List[Hit]:
                 om_id = int(tokens[2])
                 pmt_id = None
 
-            # In the HIT line `... pth pph dth dph`, tokens 5,6 are the photon
-            # direction and tokens 7,8 are the impact position on the OM (see
-            # f2k.cxx / pro.cu). The Hit fields are named for the physical
-            # quantity, so the position pair fills om_* and the direction pair
-            # fills photon_* — not the token order.
+            # Fields follow the physical quantity, not HIT token order: tokens
+            # 5,6 are the photon direction (photon_*), 7,8 the OM impact (om_*).
             hits.append(
                 Hit(
                     string_id=int(tokens[1]),

@@ -4,10 +4,8 @@ import pytest
 
 from prometheus.photon_propagation.utils.parse_ppc import parse_ppc
 
-# Representative HIT lines. Tokens after the OM id are `time wv pth pph dth dph`,
-# i.e. the photon direction (pth, pph) comes before the impact position on the OM
-# (dth, dph). Here that is direction (1.1, 2.2) then position (0.5, 1.0), chosen
-# distinct so tests catch a direction/position swap.
+# Tokens after the OM id are `time wv pth pph dth dph`: direction (1.1, 2.2)
+# then OM impact (0.5, 1.0), kept distinct so a direction/position swap is caught.
 _LEGACY_HIT = "HIT 1 42 1234.5 400.0 1.1 2.2 0.5 1.0\n"
 _NEXTGEN_HIT_PMT1 = "HIT 1 42_1 1234.5 400.0 1.1 2.2 0.5 1.0\n"
 _NEXTGEN_HIT_PMT0 = "HIT 1 42_0 5678.9 420.0 0.9 1.8 0.3 0.7\n"

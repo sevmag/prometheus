@@ -321,8 +321,7 @@ class TestHitCartesian:
 
 
 def _sphere_point(R, zenith, azimuth):
-    """Impact point on a sphere of radius ``R`` for f2k angles, matching
-    ``_hit_cartesian`` (spherical case, ``F = 1``)."""
+    """Impact point on a sphere of radius ``R``, matching ``_hit_cartesian``."""
     return (
         -R * np.sin(zenith) * np.cos(azimuth),
         -R * np.sin(zenith) * np.sin(azimuth),
@@ -331,17 +330,11 @@ def _sphere_point(R, zenith, azimuth):
 
 
 class TestParseToImpactPoint:
-    """``parse_ppc`` + ``_hit_cartesian`` must place ``hit_{x,y,z}`` at the
-    OM-impact angles (HIT tokens 7,8), not the photon-direction angles
-    (tokens 5,6). A surface-membership check alone cannot catch the swap
-    because every angle pair lands on the DOM surface, so this pins the point
-    to the position pair and asserts it differs from the direction pair.
-    """
-
     def test_hit_cartesian_uses_impact_position_not_direction(self, tmp_path):
+        # A surface-membership check cannot catch the swap (every angle pair
+        # lands on the DOM surface), so pin the point to the OM-impact pair
+        # (tokens 7,8) and assert it differs from the direction pair (5,6).
         R = 0.16510
-        # tokens: `... time wv pth pph dth dph` -> direction (1.1, 2.2),
-        # impact position (0.5, 1.0), deliberately distinct.
         p = tmp_path / "ppc_out.txt"
         p.write_text("HIT 1 42_1 1234.5 400.0 1.1 2.2 0.5 1.0\n")
         hit = parse_ppc(str(p))[0]
@@ -349,8 +342,5 @@ class TestParseToImpactPoint:
         mod = _FakeModule(key=(1, 1), pos=[0.0, 0.0, 0.0], Rr=R, Rz=R)
         got = _hit_cartesian(hit, mod)
 
-        expected = _sphere_point(R, 0.5, 1.0)  # impact position
-        wrong = _sphere_point(R, 1.1, 2.2)  # photon direction (the bug)
-
-        assert got == pytest.approx(expected, abs=1e-9)
-        assert got != pytest.approx(wrong, abs=1e-3)
+        assert got == pytest.approx(_sphere_point(R, 0.5, 1.0), abs=1e-9)
+        assert got != pytest.approx(_sphere_point(R, 1.1, 2.2), abs=1e-3)
