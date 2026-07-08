@@ -216,12 +216,56 @@ def _smoke():
           f"flash_dom={flash_key}, source={src}")
 
 
+def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
+    det = build_detector()
+    dirs = pmt_dirs_of(det)
+    outdir = os.path.join(PROM, "output/light_source_geometry")
+    os.makedirs(outdir, exist_ok=True)
+    results = []
+    for flash_key in pick_sources(det):
+        tmp = tempfile.mkdtemp(prefix="lsg_")
+        try:
+            stage_tables(det, tmp)
+            hits, src, _ = run_flasher(binary, tmp, flash_key[0], flash_key[1], num, device)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        source_pos = np.asarray(det[flash_key].pos, float)
+        data = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
+        png, metrics = plot_source(data, flash_key, source_pos, outdir, near_m=near_m)
+        metrics["png"] = png
+        metrics["flasher_configured_at"] = None if src is None else [float(x) for x in src]
+        results.append(metrics)
+        print(f"[{flash_key}] " + json.dumps(metrics))
+
+    with open(os.path.join(outdir, "summary.json"), "w") as f:
+        json.dump(results, f, indent=2)
+
+    def ok(m):
+        return (m["mean_cos_near"] is not None and m["mean_cos_near"] > 0
+                and m["mean_cos_far"] is not None
+                and m["mean_cos_near"] > m["mean_cos_far"])
+    npass = sum(ok(m) for m in results)
+    if npass == len(results) and results:
+        print(f"VERDICT: PASS ({npass}/{len(results)} sources source-facing)")
+        return 0
+    print(f"VERDICT: FAIL ({npass}/{len(results)} sources passed); "
+          f"mean_cos_near={[round(m['mean_cos_near'],3) if m['mean_cos_near'] is not None else None for m in results]} "
+          f"mean_cos_far={[round(m['mean_cos_far'],3) if m['mean_cos_far'] is not None else None for m in results]}")
+    return 1
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--analyze-smoke", action="store_true")
+    ap.add_argument("--run", action="store_true")
+    ap.add_argument("--num", type=float, default=1e9)
+    ap.add_argument("--device", type=int, default=0)
     args = ap.parse_args()
     if args.smoke:
         _smoke()
     elif args.analyze_smoke:
         _analyze_smoke()
+    elif args.run:
+        sys.exit(main(num=int(args.num), device=args.device))
+
