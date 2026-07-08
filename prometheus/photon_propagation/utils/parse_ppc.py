@@ -58,16 +58,18 @@ def parse_ppc(ppc_file: str) -> List[Hit]:
                 om_id = int(tokens[2])
                 pmt_id = None
 
+            # Fields follow the physical quantity, not HIT token order: tokens
+            # 5,6 are the photon direction (photon_*), 7,8 the OM impact (om_*).
             hits.append(
                 Hit(
                     string_id=int(tokens[1]),
                     om_id=om_id,
                     time=float(tokens[3]),
                     wavelength=float(tokens[4]),
-                    om_zenith=float(tokens[5]),
-                    om_azimuth=float(tokens[6]),
-                    photon_zenith=float(tokens[7]),
-                    photon_azimuth=float(tokens[8]),
+                    om_zenith=float(tokens[7]),
+                    om_azimuth=float(tokens[8]),
+                    photon_zenith=float(tokens[5]),
+                    photon_azimuth=float(tokens[6]),
                     pmt_id=pmt_id,
                 )
             )

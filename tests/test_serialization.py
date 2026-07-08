@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from prometheus.photon_propagation.hit import Hit
+from prometheus.photon_propagation.utils.parse_ppc import parse_ppc
 from prometheus.utils.serialization.serialize_particles_to_awkward import (
     _VALID_MODES,
     _hit_cartesian,
@@ -312,3 +313,34 @@ class TestHitCartesian:
         hit = _make_hit(om_zenith=np.pi / 4, om_azimuth=0.3)
         hx, hy, hz = _hit_cartesian(hit, mod)
         assert np.sqrt(hx**2 + hy**2) == pytest.approx(0.06, rel=1e-5)
+
+
+# ---------------------------------------------------------------------------
+# End-to-end: a parsed HIT line must reconstruct the *impact position*
+# ---------------------------------------------------------------------------
+
+
+def _sphere_point(R, zenith, azimuth):
+    """Impact point on a sphere of radius ``R``, matching ``_hit_cartesian``."""
+    return (
+        -R * np.sin(zenith) * np.cos(azimuth),
+        -R * np.sin(zenith) * np.sin(azimuth),
+        -R * np.cos(zenith),
+    )
+
+
+class TestParseToImpactPoint:
+    def test_hit_cartesian_uses_impact_position_not_direction(self, tmp_path):
+        # A surface-membership check cannot catch the swap (every angle pair
+        # lands on the DOM surface), so pin the point to the OM-impact pair
+        # (tokens 7,8) and assert it differs from the direction pair (5,6).
+        R = 0.16510
+        p = tmp_path / "ppc_out.txt"
+        p.write_text("HIT 1 42_1 1234.5 400.0 1.1 2.2 0.5 1.0\n")
+        hit = parse_ppc(str(p))[0]
+
+        mod = _FakeModule(key=(1, 1), pos=[0.0, 0.0, 0.0], Rr=R, Rz=R)
+        got = _hit_cartesian(hit, mod)
+
+        assert got == pytest.approx(_sphere_point(R, 0.5, 1.0), abs=1e-9)
+        assert got != pytest.approx(_sphere_point(R, 1.1, 2.2), abs=1e-3)
