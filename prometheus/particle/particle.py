@@ -28,6 +28,10 @@ class Particle:
     serialization_idx : int
         Index helper for serialization. This will be overwritten at
         serialization time.
+    time : float
+        Time in ns at which the particle starts, relative to the primary
+        interaction vertex (``0.0``). Non-zero for decay products, which are
+        created after the parent's flight to the decay vertex.
     """
 
     pdg_code: int
@@ -35,6 +39,9 @@ class Particle:
     position: np.ndarray
     direction: np.ndarray
     serialization_idx: int
+    # kw_only so this defaulted field can precede PropagatableParticle's
+    # non-defaulted `parent` without tripping the dataclass field-order rule.
+    time: float = field(default=0.0, kw_only=True)
 
     def __str__(self):
         return PDG_to_pstring[self.pdg_code]
