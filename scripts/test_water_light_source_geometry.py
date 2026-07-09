@@ -87,9 +87,11 @@ def pmt_normal(zen_deg, az_deg):
 
 
 def pick_sources(detector):
-    """Pick 3 flashing DOMs inside the array: centroid-nearest, edge, near-top-interior."""
-    keys = [m.key for m in detector.modules]
-    pos = np.vstack([np.asarray(m.pos, float) for m in detector.modules])
+    """Pick 3 flashing DOMs inside the array, excluding string 0 (PPC reserves
+    str==0 for standard candles): centroid-nearest, edge, near-top-interior."""
+    mods = [m for m in detector.modules if m.key[0] != 0]
+    keys = [m.key for m in mods]
+    pos = np.vstack([np.asarray(m.pos, float) for m in mods])
     off = detector.offset
     center = keys[int(np.argmin(np.linalg.norm(pos - off, axis=1)))]
     edge = keys[int(np.argmax(np.linalg.norm(pos[:, :2] - off[:2], axis=1)))]
@@ -135,31 +137,75 @@ def analyze(detector, pmt_dirs, hits, source_pos, flash_key=None):
     return np.array(rows, dtype=float) if rows else np.empty((0, 6))
 
 
-def plot_source(data, source_key, source_pos, outdir, near_m=75.0):
-    """Write theta/cos histograms (near vs far) and return a metrics dict."""
+def _unit_from_zen_az_rad(zen, az):
+    """Unit vector from zenith, azimuth given in RADIANS."""
+    return np.array([np.sin(zen) * np.cos(az), np.sin(zen) * np.sin(az), np.cos(zen)])
+
+
+def analyze_photon(detector, hits, source_pos, flash_key=None):
+    """Per first-hit PMT: angle between the recorded photon direction and the
+    source->OM direction (D - source). Direct light -> ~0 deg. Uses only the
+    recorded photon momentum + geometry (NO PMT normal), so it validates the
+    light source independent of getPMT's PMT assignment.
+
+    Returns array cols [string, om, pmt, angle_deg, cos, dist_m].
+    """
+    posmap = {m.key: np.asarray(m.pos, float) for m in detector.modules}
+    rows = []
+    for (s, o, p), h in first_hit_per_pmt(hits).items():
+        if (s, o) not in posmap or (s, o) == flash_key:
+            continue
+        D = posmap[(s, o)]
+        u = D - source_pos
+        nu = np.linalg.norm(u)
+        if nu == 0:
+            continue
+        u = u / nu
+        d_pho = _unit_from_zen_az_rad(h.photon_zenith, h.photon_azimuth)  # radians
+        cos = float(np.dot(d_pho, u))
+        cos = max(-1.0, min(1.0, cos))
+        rows.append((s, o, p, np.degrees(np.arccos(cos)), cos, nu))
+    return np.array(rows, dtype=float) if rows else np.empty((0, 6))
+
+
+def plot_source(data_norm, data_pho, source_key, source_pos, outdir, near_m=75.0):
+    """Primary panel: photon-direction validation (light comes from source).
+    Secondary panel: PMT-normal cos (getPMT-confounded). Returns metrics dict."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     os.makedirs(outdir, exist_ok=True)
-    theta, cos, dist = data[:, 3], data[:, 4], data[:, 5]
-    near = dist < near_m
-    far = ~near
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
-    for ax, arr, xlabel, bins, rng, mark in [
-        (axes[0], theta, "angle(n, S-P) [deg]", 36, (0, 180), 0),
-        (axes[1], cos, "cos(angle)  (face-on -> +1)", 40, (-1, 1), 1),
-    ]:
-        if near.sum():
-            ax.hist(arr[near], bins=bins, range=rng, histtype="step",
-                    density=True, label=f"near (<{near_m:.0f} m) N={int(near.sum())}")
-        if far.sum():
-            ax.hist(arr[far], bins=bins, range=rng, histtype="step",
-                    density=True, label=f"far N={int(far.sum())}")
-        ax.axvline(mark, color="k", ls=":")
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel("pdf")
-        ax.legend()
+
+    ang, dph = data_pho[:, 3], data_pho[:, 5]
+    pn, pf = dph < near_m, ~(dph < near_m)
+    if pn.sum():
+        axes[0].hist(ang[pn], bins=36, range=(0, 180), histtype="step",
+                     density=True, label=f"near (<{near_m:.0f} m) N={int(pn.sum())}")
+    if pf.sum():
+        axes[0].hist(ang[pf], bins=36, range=(0, 180), histtype="step",
+                     density=True, label=f"far N={int(pf.sum())}")
+    axes[0].axvline(0, color="k", ls=":")
+    axes[0].set_xlabel("angle(photon dir, source->OM) [deg]  (direct light -> 0)")
+    axes[0].set_ylabel("pdf")
+    axes[0].set_title("PRIMARY: light-source direction")
+    axes[0].legend()
+
+    cos, dn = data_norm[:, 4], data_norm[:, 5]
+    nn, nf = dn < near_m, ~(dn < near_m)
+    if nn.sum():
+        axes[1].hist(cos[nn], bins=40, range=(-1, 1), histtype="step",
+                     density=True, label=f"near N={int(nn.sum())}")
+    if nf.sum():
+        axes[1].hist(cos[nf], bins=40, range=(-1, 1), histtype="step",
+                     density=True, label=f"far N={int(nf.sum())}")
+    axes[1].axvline(1, color="k", ls=":")
+    axes[1].set_xlabel("cos(PMT normal, source)  (face-on -> +1)")
+    axes[1].set_ylabel("pdf")
+    axes[1].set_title("secondary: PMT-normal (getPMT-confounded)")
+    axes[1].legend()
+
     fig.suptitle(f"ARCA water isotropic flasher | source DOM {source_key} "
                  f"@ {np.round(source_pos, 1)}")
     fig.tight_layout()
@@ -169,11 +215,12 @@ def plot_source(data, source_key, source_pos, outdir, near_m=75.0):
     return png, {
         "source_key": [int(source_key[0]), int(source_key[1])],
         "source_pos": [float(x) for x in source_pos],
-        "n_pmt_hits": int(len(data)),
-        "mean_cos_all": float(np.mean(cos)) if len(cos) else None,
-        "mean_cos_near": float(np.mean(cos[near])) if near.sum() else None,
-        "mean_cos_far": float(np.mean(cos[far])) if far.sum() else None,
-        "median_theta_near": float(np.median(theta[near])) if near.sum() else None,
+        "n_pmt_hits": int(len(data_pho)),
+        "photon_median_near_deg": float(np.median(ang[pn])) if pn.sum() else None,
+        "photon_median_far_deg": float(np.median(ang[pf])) if pf.sum() else None,
+        "photon_mean_near_deg": float(np.mean(ang[pn])) if pn.sum() else None,
+        "normal_mean_cos_near": float(np.mean(cos[nn])) if nn.sum() else None,
+        "normal_mean_cos_far": float(np.mean(cos[nf])) if nf.sum() else None,
     }
 
 
@@ -189,11 +236,10 @@ def _analyze_smoke():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     source_pos = np.asarray(det[flash_key].pos, float)  # geo frame, same as PMT centers
-    data = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
-    assert len(data) > 0, "no PMT rows to analyze"
-    assert np.all((data[:, 3] >= 0) & (data[:, 3] <= 180))
-    assert np.all((data[:, 4] >= -1) & (data[:, 4] <= 1))
-    png, metrics = plot_source(data, flash_key, source_pos, outdir)
+    data_norm = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
+    data_pho = analyze_photon(det, hits, source_pos, flash_key=flash_key)
+    assert len(data_pho) > 0, "no hits to analyze"
+    png, metrics = plot_source(data_norm, data_pho, flash_key, source_pos, outdir)
     print("ANALYZE_SMOKE " + json.dumps(metrics))
     print("PNG " + png)
 
@@ -230,8 +276,9 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
         source_pos = np.asarray(det[flash_key].pos, float)
-        data = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
-        png, metrics = plot_source(data, flash_key, source_pos, outdir, near_m=near_m)
+        data_norm = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
+        data_pho = analyze_photon(det, hits, source_pos, flash_key=flash_key)
+        png, metrics = plot_source(data_norm, data_pho, flash_key, source_pos, outdir, near_m=near_m)
         metrics["png"] = png
         metrics["flasher_configured_at"] = None if src is None else [float(x) for x in src]
         results.append(metrics)
@@ -241,16 +288,17 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
         json.dump(results, f, indent=2)
 
     def ok(m):
-        return (m["mean_cos_near"] is not None and m["mean_cos_near"] > 0
-                and m["mean_cos_far"] is not None
-                and m["mean_cos_near"] > m["mean_cos_far"])
+        return (m["photon_median_near_deg"] is not None
+                and m["photon_median_near_deg"] < 15.0
+                and m["photon_median_far_deg"] is not None
+                and m["photon_median_near_deg"] < m["photon_median_far_deg"])
     npass = sum(ok(m) for m in results)
     if npass == len(results) and results:
-        print(f"VERDICT: PASS ({npass}/{len(results)} sources source-facing)")
+        print(f"VERDICT: PASS ({npass}/{len(results)} sources: direct light from source, near sharper than far)")
         return 0
-    print(f"VERDICT: FAIL ({npass}/{len(results)} sources passed); "
-          f"mean_cos_near={[round(m['mean_cos_near'],3) if m['mean_cos_near'] is not None else None for m in results]} "
-          f"mean_cos_far={[round(m['mean_cos_far'],3) if m['mean_cos_far'] is not None else None for m in results]}")
+    print(f"VERDICT: FAIL ({npass}/{len(results)}); "
+          f"photon_median_near={[round(m['photon_median_near_deg'],2) if m['photon_median_near_deg'] is not None else None for m in results]} "
+          f"photon_median_far={[round(m['photon_median_far_deg'],2) if m['photon_median_far_deg'] is not None else None for m in results]}")
     return 1
 
 
