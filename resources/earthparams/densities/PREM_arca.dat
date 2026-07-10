@@ -33,6 +33,6 @@
 6346600 moho_boundary         MANTLE      2    2.691     1.08679956050855438e-07   # surface of mantle
 6356000 inner_crust           ROCK        1    2.900    
 6371324 rockice_boundary      ROCK        1    2.650      # surface of bed rock, 1.0 x 2.65
-6374824 clearice_boundary     WATER       1    1.0   # 3500 m at Capo Passero - West Ionian Sea https://www.km3net.org/wp-content/uploads/2015/07/KM3NeT-TDR-Part-2.pdf
+6374824 clearice_boundary     WATER       1    1.04   # 3500 m at Capo Passero - West Ionian Sea https://www.km3net.org/wp-content/uploads/2015/07/KM3NeT-TDR-Part-2.pdf
 6478000 atmo_radius           AIR         1    0.000811   # 0.673atm x 1.205e-3(g/cm3 for 1atm) 
 
