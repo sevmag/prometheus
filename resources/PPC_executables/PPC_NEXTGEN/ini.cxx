@@ -169,7 +169,11 @@ struct itype{
   float mas;  // maximum angular sensitivity
   vector<float> s; // ang. sens. coefficients
 
-  itype(): def(false){ }
+  bool km3_tab;            // use tabulated KM3NeT curve instead of analytic f
+  vector<float> km3_ce;    // measured cos(eta), ascending (head-on = -1)
+  vector<float> km3_f1;    // measured relative sensitivity at km3_ce
+
+  itype(): def(false), km3_tab(false){ }
 
   void add(string file){
     def=true; mas=1, ave=0;
@@ -207,12 +211,22 @@ struct itype{
     dirs.push_back(dir);
   }
 
+  void load_km3(string file){ // measured KM3NeT per-PMT angular sensitivity
+    ifstream in(file.c_str());
+    float ce, s1;
+    while(in>>ce>>s1){ km3_ce.push_back(ce); km3_f1.push_back(s1); }
+    if(km3_ce.size()<2){ cerr<<"Could not load KM3NeT sensitivity from "<<file<<endl; exit(1); }
+    km3_tab=true;
+    cerr<<"Loaded "<<km3_ce.size()<<" KM3NeT angular-sensitivity points"<<endl;
+  }
+
   float aS(float x){
     float al=acos(x);
     return al-sin(2*al)/2;
   }
 
   float f(float x){ // angular sensitivity curve (peaks at 1)
+    if(km3_tab) return wtab_interp(km3_ce, km3_f1, -x); // tabulated KM3NeT: f(x)=f1(cos_eta=-x)
     if(beta<-1) return sqrt(1-x*x);
     else{
       float sum=x>0?x:0;
@@ -811,6 +825,7 @@ struct ini{
 	if(ico.ini(omdir+"om.dirs")<1){ cerr<<"Error: could not initialize an array of directions"<<endl; exit(1); }
 	nextgen=true;
 	for(map<int, itype>::iterator j=types.begin(); j!=types.end(); ++j){
+	  if(j->second.beta==-3) j->second.load_km3(omdir+"km3net_as.dat");
 	  j->second.fraq();
 	  cerr<<" OM Type "<<j->first<<" with "<<j->second.dirs.size()<<" PMTs added ("<<j->second.rde<<")"<<endl;
 	}
