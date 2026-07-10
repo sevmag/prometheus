@@ -174,7 +174,7 @@ def ppc_sim(particle: Particle, det: Detector, lp: LeptonPropagator, ppc_config:
         # per-DOM azimuthal rotation); cx.dat = per-DOM orientation vector. PPC
         # never sees these unless they are staged into the tmpdir, even if they
         # are present in ppctables.
-        for fname in ("dx.dat", "cx.dat"):
+        for fname in ("dx.dat", "cx.dat", "km3net_as.dat"):
             src = os.path.join(ppc_config["paths"]["ppctables"], fname)
             if os.path.exists(src):
                 shutil.copy(src, os.path.join(ppc_tmpdir, fname))

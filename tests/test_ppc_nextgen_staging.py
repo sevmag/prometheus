@@ -155,6 +155,13 @@ class TestNextgenStaging:
         for name in ("om.conf", "om.map", "om.dirs", "om.wv_1.0", "eff-f2k"):
             assert (ppc_tmpdir / name).exists(), f"{name} was not staged"
 
+    def test_km3net_as_staged(self, dirs):
+        ppc_tmpdir, ppctables = dirs
+        (ppctables / "km3net_as.dat").write_text("-1.00 1.0000\n0.25 0.0000\n")
+        det = _nextgen_det()
+        _run(det, _make_config(ppc_tmpdir, ppctables), _CapturePopen())
+        assert (ppc_tmpdir / "km3net_as.dat").exists(), "km3net_as.dat was not staged"
+
     def test_om_wv_content_copied(self, dirs):
         ppc_tmpdir, ppctables = dirs
         det = _nextgen_det()
