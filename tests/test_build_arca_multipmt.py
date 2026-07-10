@@ -112,3 +112,12 @@ class TestOmConfAndMap:
         with open(path) as f:
             rows = [ln for ln in f if ln.strip()]
         assert len(rows) == 2070
+
+
+class TestKm3netSensitivityDefault:
+    def test_default_beta_is_km3net_sentinel(self, detector):
+        assert all(m.beta == -3.0 for m in detector.modules)
+
+    def test_beta_override_recovers_analytic(self, builder):
+        det = builder.build_arca_multipmt_detector(beta=0.49)
+        assert all(m.beta == 0.49 for m in det.modules)

@@ -33,7 +33,7 @@ def _load_pmt_dirs(path=DIRS):
 
 
 def build_arca_multipmt_detector(
-    geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=0.49, area=1.0
+    geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=1.0
 ):
     """Build the 2070-DOM, 31-PMT-per-DOM ARCA nextgen detector.
 
@@ -47,7 +47,10 @@ def build_arca_multipmt_detector(
     Rr, Rz : float
         Module semi-axes [m]. Default 0.2159 = 17" DOM sphere radius.
     beta : float
-        PMT angular sensitivity shape parameter.
+        PMT angular sensitivity shape parameter written to om.conf. The default
+        -3.0 is a PPC sentinel selecting the tabulated measured KM3NeT per-PMT
+        sensitivity (resources/PPC_tables/arca_water/km3net_as.dat) in nextgen
+        multi-PMT mode. Pass beta=0.49 to fall back to the legacy analytic curve.
     area : float
         Overall efficiency scaling factor written to om.conf.
 
