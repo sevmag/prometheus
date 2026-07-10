@@ -42,7 +42,8 @@ PDG_to_pstring = {
     211: "PiPlus",  # I'm not sure that these are defined either but...
     -211: "PiMinus",  # I'm not sure that these are defined either but...
     311: "KZero",  # I'm not sure that these are defined either but...
-    # anti-K0 (-311) deposits identically to K0; distinct label keeps pstring_to_PDG["KZero"] == 311.
+    # anti-K0 (-311) deposits identically to K0; distinct label keeps
+    # pstring_to_PDG["KZero"] == 311.
     -311: "KZeroBar",
     321: "KPlus",
     -321: "KMinus",

@@ -9,8 +9,8 @@ import numpy as np
 import pytest
 
 import prometheus.photon_propagation.ppc_photon_propagator as ppc_mod
-from prometheus.particle import PropagatableParticle
 from prometheus.lepton_propagation import Loss
+from prometheus.particle import PropagatableParticle
 from prometheus.utils import serialize_to_f2k
 from prometheus.utils.translators import int_type_to_str
 

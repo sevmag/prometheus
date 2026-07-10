@@ -1,5 +1,3 @@
-from typing import Optional
-
 import awkward as ak
 import numpy as np
 

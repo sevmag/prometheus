@@ -11,7 +11,6 @@ from prometheus.utils.serialization.serialize_particles_to_awkward import (
     serialize_particles_to_awkward,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fake detector / injection helpers
 # ---------------------------------------------------------------------------

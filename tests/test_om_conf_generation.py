@@ -5,8 +5,7 @@ import pytest
 
 from prometheus.detector.detector import Detector
 from prometheus.detector.medium import Medium
-from prometheus.detector.module import Module, _OMR
-
+from prometheus.detector.module import Module
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -50,7 +49,6 @@ def _parse_om_conf(path):
     """Minimal parser that returns {type_id: dict} from an om.conf file."""
     types = {}
     current = None
-    pmt_extra = []
     with open(path) as f:
         for line in f:
             line = line.rstrip("\n")
@@ -230,7 +228,7 @@ class TestToOmMap:
         path = str(tmp_path / "om.map")
         det.to_om_map(path)
         with open(path) as f:
-            lines = [l for l in f if l.strip()]
+            lines = [ln for ln in f if ln.strip()]
         assert len(lines) == 0
 
     def test_typed_module_present(self, tmp_path):
@@ -239,7 +237,7 @@ class TestToOmMap:
         path = str(tmp_path / "om.map")
         det.to_om_map(path)
         with open(path) as f:
-            lines = [l.split() for l in f if l.strip()]
+            lines = [ln.split() for ln in f if ln.strip()]
         assert len(lines) == 1
         assert int(lines[0][2]) == 120
 
@@ -249,7 +247,7 @@ class TestToOmMap:
         path = str(tmp_path / "om.map")
         det.to_om_map(path)
         with open(path) as f:
-            lines = [l.split() for l in f if l.strip()]
+            lines = [ln.split() for ln in f if ln.strip()]
         assert int(lines[0][0]) == 3
         assert int(lines[0][1]) == 7
 
@@ -262,5 +260,5 @@ class TestToOmMap:
         det.to_om_map(map_path)
         conf_types = set(_parse_om_conf(conf_path).keys())
         with open(map_path) as f:
-            map_types = {int(l.split()[2]) for l in f if l.strip()}
+            map_types = {int(ln.split()[2]) for ln in f if ln.strip()}
         assert map_types.issubset(conf_types)

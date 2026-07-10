@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from prometheus.detector.module import Module, _OMR
+from prometheus.detector.module import _OMR, Module
 
 _POS = np.zeros(3)
 _KEY = (0, 0)

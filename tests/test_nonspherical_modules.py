@@ -13,13 +13,12 @@ import pytest
 from prometheus.detector.detector import Detector
 from prometheus.detector.medium import Medium
 from prometheus.detector.module import Module
+from prometheus.photon_propagation.hit import Hit
 from prometheus.photon_propagation.utils.parse_ppc import parse_ppc
 from prometheus.utils.serialization.serialize_particles_to_awkward import (
     _hit_cartesian,
     serialize_particles_to_awkward,
 )
-from prometheus.photon_propagation.hit import Hit
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -64,8 +63,12 @@ def _parse_om_conf_types(path):
             if not line[0].isspace():
                 tokens = line.split()
                 current = int(tokens[1])
-                types[current] = {"Rr": float(tokens[4]), "Rz": float(tokens[5]),
-                                  "n_pmts": int(tokens[6]), "pmt_dirs": [(float(tokens[7]), float(tokens[8]))]}
+                types[current] = {
+                    "Rr": float(tokens[4]),
+                    "Rz": float(tokens[5]),
+                    "n_pmts": int(tokens[6]),
+                    "pmt_dirs": [(float(tokens[7]), float(tokens[8]))],
+                }
             else:
                 stripped = line.strip().split()
                 if stripped and current is not None:
@@ -117,7 +120,7 @@ class TestOmConfGeometry:
         det.to_om_map(str(tmp_path / "om.map"))
         conf_ids = set(_parse_om_conf_types(str(tmp_path / "om.conf")).keys())
         with open(str(tmp_path / "om.map")) as f:
-            map_ids = {int(l.split()[2]) for l in f if l.strip()}
+            map_ids = {int(ln.split()[2]) for ln in f if ln.strip()}
         assert map_ids.issubset(conf_ids)
 
 
@@ -251,6 +254,7 @@ def _require_ppc():
 def _run_minimal_ppc(tmp_path, det, exe, tables, om_dirs=""):
     """Run PPC with a bright point source and return hits."""
     import shutil
+
     from prometheus.lepton_propagation.loss import Loss
     from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
 

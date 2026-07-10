@@ -7,8 +7,6 @@ gated behind ``--run-slow``.
 
 import os
 import shutil
-import textwrap
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -18,7 +16,6 @@ from prometheus.detector.detector import Detector
 from prometheus.detector.medium import Medium
 from prometheus.detector.module import Module
 from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
-
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
@@ -68,7 +65,6 @@ def _make_config(tmp_path, om_dirs_path=""):
 
 def _dummy_particle():
     """Return a particle-like object that skips the lepton propagation branch."""
-    from prometheus.particle import PropagatableParticle
     import numpy as np
 
     # Use a charged pion (211) so ppc_sim creates a point-deposition loss.
@@ -275,7 +271,6 @@ class TestPPCIntegration:
     def _run_ppc(self, tmp_path, det, tables_dir, ppc_exe, om_dirs=""):
         """Run a minimal PPC simulation and return hits."""
         from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
-        import shutil
 
         # Copy tables
         sim_dir = tmp_path / "tables"

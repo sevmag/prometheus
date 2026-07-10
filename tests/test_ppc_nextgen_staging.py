@@ -18,7 +18,6 @@ from prometheus.detector.medium import Medium
 from prometheus.detector.module import Module
 from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
 
-
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
 # ---------------------------------------------------------------------------

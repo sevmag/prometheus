@@ -9,7 +9,6 @@ peaks toward 0 deg (cos -> +1), sharper for nearby OMs. Run on mimo in spack env
 `prometheus`.
 """
 import argparse
-import glob
 import importlib.util
 import json
 import os
@@ -278,7 +277,8 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
         source_pos = np.asarray(det[flash_key].pos, float)
         data_norm = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
         data_pho = analyze_photon(det, hits, source_pos, flash_key=flash_key)
-        png, metrics = plot_source(data_norm, data_pho, flash_key, source_pos, outdir, near_m=near_m)
+        png, metrics = plot_source(
+            data_norm, data_pho, flash_key, source_pos, outdir, near_m=near_m)
         metrics["png"] = png
         metrics["flasher_configured_at"] = None if src is None else [float(x) for x in src]
         results.append(metrics)
@@ -294,11 +294,15 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
                 and m["photon_median_near_deg"] < m["photon_median_far_deg"])
     npass = sum(ok(m) for m in results)
     if npass == len(results) and results:
-        print(f"VERDICT: PASS ({npass}/{len(results)} sources: direct light from source, near sharper than far)")
+        print(f"VERDICT: PASS ({npass}/{len(results)} sources: "
+              "direct light from source, near sharper than far)")
         return 0
+    near = [round(m['photon_median_near_deg'], 2)
+            if m['photon_median_near_deg'] is not None else None for m in results]
+    far = [round(m['photon_median_far_deg'], 2)
+           if m['photon_median_far_deg'] is not None else None for m in results]
     print(f"VERDICT: FAIL ({npass}/{len(results)}); "
-          f"photon_median_near={[round(m['photon_median_near_deg'],2) if m['photon_median_near_deg'] is not None else None for m in results]} "
-          f"photon_median_far={[round(m['photon_median_far_deg'],2) if m['photon_median_far_deg'] is not None else None for m in results]}")
+          f"photon_median_near={near} photon_median_far={far}")
     return 1
 
 

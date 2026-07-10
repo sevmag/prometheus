@@ -21,18 +21,22 @@ def parse_args():
     p.add_argument("--storage-prefix", default="./output/")
     p.add_argument("--propagator", default="PPC", help="PPC (CPU) or PPC_CUDA (GPU)")
     p.add_argument("--ppc-exe", dest="ppc_exe", default=None,
-                   help="override path to the ppc binary (else use the propagator's config default)")
+                   help="override path to the ppc binary (else use the "
+                        "propagator's config default)")
     p.add_argument("--ppctables", dest="ppctables", default=None,
-                   help="override path to the ppctables dir (else use the propagator's config default)")
+                   help="override path to the ppctables dir (else use the "
+                        "propagator's config default)")
     p.add_argument("--device", type=int, default=0,
                    help="ppc device index; the GPU id when --propagator PPC_CUDA")
     p.add_argument("--ranged", action="store_true", help="ranged injection (default: volume)")
     p.add_argument("--show-ppc-stderr", dest="show_ppc_stderr", action="store_true",
                    help="do not suppress PPC stderr (shows photons/hits per event; debugging)")
     p.add_argument("--multipmt", action="store_true",
-                   help="build the multi-PMT ARCA detector (2070 DOMs x 31 PMT) instead of reading --geo")
+                   help="build the multi-PMT ARCA detector (2070 DOMs x 31 PMT) "
+                        "instead of reading --geo")
     p.add_argument("--output-mode", dest="output_mode", default=None,
-                   help="serializer output mode: minimal|standard|extended (extended adds pmt_id + hit positions)")
+                   help="serializer output mode: minimal|standard|extended "
+                        "(extended adds pmt_id + hit positions)")
     return p.parse_args()
 
 
