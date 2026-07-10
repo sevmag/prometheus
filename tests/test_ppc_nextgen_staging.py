@@ -99,15 +99,15 @@ class _CapturePopen:
     def __init__(self):
         self.env = {}
 
-    def __call__(self, cmd, shell, stdout, env):
+    def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
         self.env.clear()
         self.env.update(env or {})
-        # Command form: "ppc N < input > output 2>/dev/null"
+        # Command form: "ppc N < input > output"
         output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
         open(output_path, "w").close()
         mock = MagicMock()
         mock.returncode = 0
-        mock.wait = lambda: None
+        mock.communicate = lambda: (b"", b"")
         return mock
 
 

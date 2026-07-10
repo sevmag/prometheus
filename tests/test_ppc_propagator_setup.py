@@ -99,16 +99,15 @@ class _FakePopen:
     def __init__(self, hit_lines=None):
         self._lines = hit_lines or []
 
-    def __call__(self, cmd, shell, stdout, env):
-        # Strip stderr redirect before finding the stdout redirect target.
-        # Command form: "ppc N < input > output 2>/dev/null"
+    def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
+        # Command form: "ppc N < input > output"
         output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
         with open(output_path, "w") as f:
             for line in self._lines:
                 f.write(line)
         mock = MagicMock()
         mock.returncode = 0
-        mock.wait = lambda: None
+        mock.communicate = lambda: (b"", b"")
         return mock
 
 
@@ -191,13 +190,13 @@ class TestPropagatorSetup:
         captured_env = {}
 
         class _CapturePopen:
-            def __call__(self, cmd, shell, stdout, env):
+            def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
                 captured_env.update(env or {})
-                output_path = cmd.split(">")[-1].strip().split()[0]
+                output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
                 open(output_path, "w").close()
                 mock = MagicMock()
                 mock.returncode = 0
-                mock.wait = lambda: None
+                mock.communicate = lambda: (b"", b"")
                 return mock
 
         with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
