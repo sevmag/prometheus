@@ -8,14 +8,16 @@ def parse_ppc(ppc_file: str) -> List[Hit]:
 
     Handles both the legacy format::
 
-        HIT string om time wavelength pth pph dth dph
+        HIT string om time wavelength dth dph pth pph
 
     and the nextgen format produced when ``om.conf`` is present::
 
-        HIT string dom_pmt time wavelength pth pph dth dph
+        HIT string dom_pmt time wavelength dth dph pth pph
 
-    The format is auto-detected from the first HIT line.  A file may not mix
-    formats; if a format inconsistency is detected a ``ValueError`` is raised.
+    where ``dth/dph`` is the impact position on the OM and ``pth/pph`` is the
+    photon direction. The format is auto-detected from the first HIT line.  A
+    file may not mix formats; if a format inconsistency is detected a
+    ``ValueError`` is raised.
 
     Parameters
     ----------
@@ -56,18 +58,18 @@ def parse_ppc(ppc_file: str) -> List[Hit]:
                 om_id = int(tokens[2])
                 pmt_id = None
 
-            # Fields follow the physical quantity, not HIT token order: tokens
-            # 5,6 are the photon direction (photon_*), 7,8 the OM impact (om_*).
+            # HIT tokens 5,6 are the OM impact position (om_*), 7,8 the photon
+            # direction (photon_*).
             hits.append(
                 Hit(
                     string_id=int(tokens[1]),
                     om_id=om_id,
                     time=float(tokens[3]),
                     wavelength=float(tokens[4]),
-                    om_zenith=float(tokens[7]),
-                    om_azimuth=float(tokens[8]),
-                    photon_zenith=float(tokens[5]),
-                    photon_azimuth=float(tokens[6]),
+                    om_zenith=float(tokens[5]),
+                    om_azimuth=float(tokens[6]),
+                    photon_zenith=float(tokens[7]),
+                    photon_azimuth=float(tokens[8]),
                     pmt_id=pmt_id,
                 )
             )

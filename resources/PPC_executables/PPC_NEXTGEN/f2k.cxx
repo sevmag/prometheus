@@ -350,10 +350,10 @@ void print(){
       hitz[tmph].push_back(p);
 #else
       if(nextgen){
-	printf("HIT %d %d_%d %f %f %f %f %f %f\n", n.str, n.dom, pmt, h.t, wv, h.pth, h.pph, h.dth, h.dph);
+	printf("HIT %d %d_%d %f %f %f %f %f %f\n", n.str, n.dom, pmt, h.t, wv, h.dth, h.dph, h.pth, h.pph);
       }
       else{
-	printf("HIT %d %d %f %f %f %f %f %f\n", n.str, n.dom, h.t, wv, h.pth, h.pph, h.dth, h.dph);
+	printf("HIT %d %d %f %f %f %f %f %f\n", n.str, n.dom, h.t, wv, h.dth, h.dph, h.pth, h.pph);
       }
 #endif
     }
