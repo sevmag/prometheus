@@ -309,11 +309,15 @@ if __name__ == "__main__":
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--num", type=float, default=1e9)
     ap.add_argument("--device", type=int, default=0)
+    ap.add_argument("--cpu", action="store_true",
+                    help="use the CPU ppc binary (PPC_NEXTGEN) instead of GPU; "
+                         "1e9 photons is slow on CPU — use a smaller --num")
     args = ap.parse_args()
     if args.smoke:
         _smoke()
     elif args.analyze_smoke:
         _analyze_smoke()
     elif args.run:
-        sys.exit(main(num=int(args.num), device=args.device))
+        sys.exit(main(num=int(args.num), device=args.device,
+                      binary=BIN_CPU if args.cpu else BIN_GPU))
 
