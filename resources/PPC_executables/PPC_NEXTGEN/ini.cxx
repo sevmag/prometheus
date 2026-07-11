@@ -312,6 +312,27 @@ struct itype{
       return flag?0:-1;
     }
     else{
+      { // The PMT table `dirs` is DOM-local while dir and the cx.dat axis
+	// (local +z) are in world coordinates: rotate the photon into the DOM
+	// frame with the inverse shortest-arc rotation axis->z; the -ph roll
+	// below then completes the inverse of the DOM's tilt-then-torsion
+	// orientation. cz==1 (upright, the default when cx.dat is absent) is
+	// skipped so untilted DOMs take the unrotated path exactly.
+	float cz=tilt[2];
+	if(cz<1.f){
+	  if(cz>-1.f+1.e-6f){
+	    float t=(tilt[0]*dir[1]-tilt[1]*dir[0])/(1.f+cz);
+	    float nx=cz*dir[0]-tilt[0]*dir[2]-tilt[1]*t;
+	    float ny=cz*dir[1]-tilt[1]*dir[2]+tilt[0]*t;
+	    float nz=tilt.dot(dir);
+	    dir[0]=nx, dir[1]=ny, dir[2]=nz;
+	  }
+	  else{ // axis ~ -z: the shortest arc is ill-conditioned; use a fixed pi flip about x
+	    dir[1]=-dir[1], dir[2]=-dir[2];
+	  }
+	}
+      }
+
       if(ph>=0){ // rotating photon by -ph instead of PMTs
 	ph-=cable;
 	float cp=cos(fcv*ph);
