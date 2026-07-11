@@ -74,9 +74,7 @@ class Module:
             pmt_dirs = [(180.0, 0.0)]
 
         if len(pmt_dirs) != n_pmts:
-            raise ValueError(
-                f"len(pmt_dirs)={len(pmt_dirs)} does not match n_pmts={n_pmts}"
-            )
+            raise ValueError(f"len(pmt_dirs)={len(pmt_dirs)} does not match n_pmts={n_pmts}")
 
         self.pos = pos
         self.noise_rate = noise_rate

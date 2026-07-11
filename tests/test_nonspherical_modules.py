@@ -347,6 +347,7 @@ class TestPPCNonSphericalIntegration:
 
     def test_extended_output_round_trips_to_parquet(self, tmp_path):
         import awkward as ak
+
         exe, tables = _require_ppc()
         om_dirs = os.environ.get("PPC_OM_DIRS", "")
         mods = [_degg_mod(key=(1, i + 1), z=float(i) * 17.0) for i in range(5)]

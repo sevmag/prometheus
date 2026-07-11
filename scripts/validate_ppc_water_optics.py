@@ -8,6 +8,7 @@ refractive index. Prints "ALL OPTICS CHECKS PASS" on success.
 
 Usage:  python3 validate_ppc_water_optics.py
 """
+
 import os
 import shutil
 import subprocess
@@ -18,8 +19,8 @@ import numpy as np
 PR = "/n/holylfs05/LABS/arguelles_delgado_lab/Everyone/pzhelnin/prometheus"
 BIN = os.path.join(PR, "resources/PPC_executables/PPC_NEXTGEN/ppc")
 TAB = os.path.join(PR, "resources/PPC_tables/arca_water")
-A01, A2, A3, A4 = 1.32321, 16.2566, -4382.0, 1.1455e6           # Mediterranean n constants
-TOL = 2.0                                                       # percent
+A01, A2, A3, A4 = 1.32321, 16.2566, -4382.0, 1.1455e6  # Mediterranean n constants
+TOL = 2.0  # percent
 
 
 def rd(p):
@@ -45,11 +46,21 @@ def main():
             f.write("D1_1\t0x1\t0.0\t0.0\t-3200.0\t1\t1\n")
             f.write("D1_2\t0x2\t0.0\t0.0\t-3220.0\t1\t2\n")
         env = dict(os.environ, PPC_DUMP_OPTICS="1", PPCTABLESDIR=tmp)
-        r = subprocess.run([BIN, "0"], cwd=tmp, stdin=subprocess.DEVNULL,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
-        rows = sorted({(float(p[1]), float(p[2]), float(p[3]), float(p[4]))
-                       for p in (ln.split() for ln in r.stderr.decode().splitlines())
-                       if p and p[0] == "OPTICS"})
+        r = subprocess.run(
+            [BIN, "0"],
+            cwd=tmp,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+        rows = sorted(
+            {
+                (float(p[1]), float(p[2]), float(p[3]), float(p[4]))
+                for p in (ln.split() for ln in r.stderr.decode().splitlines())
+                if p and p[0] == "OPTICS"
+            }
+        )
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -68,7 +79,7 @@ def main():
         ea = abs(la - ca) / ca * 100
         ws = max(ws, es)
         wa = max(wa, ea)
-        nbad += (es > TOL or ea > TOL)
+        nbad += es > TOL or ea > TOL
         if abs(w - 400) < 6:
             n400 = n
     nmed = A01 + (A2 + (A3 + A4 / 400.0) / 400.0) / 400.0

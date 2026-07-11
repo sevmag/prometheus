@@ -83,9 +83,7 @@ def serialize_particles_to_awkward(
         If ``output_mode`` is not one of the recognised values.
     """
     if output_mode not in _VALID_MODES:
-        raise ValueError(
-            f"output_mode must be one of {_VALID_MODES!r}, got {output_mode!r}"
-        )
+        raise ValueError(f"output_mode must be one of {_VALID_MODES!r}, got {output_mode!r}")
 
     all_hits = []
     for injection_event in injection:
@@ -101,9 +99,7 @@ def serialize_particles_to_awkward(
 
     outdict = {}
     for idx, var in enumerate("x y z".split()):
-        outdict[f"sensor_pos_{var}"] = [
-            x[idx] if x.shape[0] > 0 else np.array([]) for x in xyz
-        ]
+        outdict[f"sensor_pos_{var}"] = [x[idx] if x.shape[0] > 0 else np.array([]) for x in xyz]
 
     # Always-present fields
     hit_functions = [

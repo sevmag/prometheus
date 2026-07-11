@@ -5,6 +5,7 @@ Based on examples/02_basic_ice.py but fully CLI-configurable, for sbatch arrays.
 Example:
   python examples/run_prometheus_sim.py -n 500 -s 1001 --final_1 TauMinus --emin 1e3 --emax 1e6
 """
+
 import argparse
 from pathlib import Path
 
@@ -20,31 +21,53 @@ def parse_args():
     p.add_argument("--geo", default="resources/geofiles/demo_ice.geo")
     p.add_argument("--storage-prefix", default="./output/")
     p.add_argument("--propagator", default="PPC", help="PPC (CPU) or PPC_CUDA (GPU)")
-    p.add_argument("--ppc-exe", dest="ppc_exe", default=None,
-                   help="override path to the ppc binary (else use the "
-                        "propagator's config default)")
-    p.add_argument("--ppctables", dest="ppctables", default=None,
-                   help="override path to the ppctables dir (else use the "
-                        "propagator's config default)")
-    p.add_argument("--device", type=int, default=0,
-                   help="ppc device index; the GPU id when --propagator PPC_CUDA")
+    p.add_argument(
+        "--ppc-exe",
+        dest="ppc_exe",
+        default=None,
+        help="override path to the ppc binary (else use the propagator's config default)",
+    )
+    p.add_argument(
+        "--ppctables",
+        dest="ppctables",
+        default=None,
+        help="override path to the ppctables dir (else use the propagator's config default)",
+    )
+    p.add_argument(
+        "--device",
+        type=int,
+        default=0,
+        help="ppc device index; the GPU id when --propagator PPC_CUDA",
+    )
     p.add_argument("--ranged", action="store_true", help="ranged injection (default: volume)")
-    p.add_argument("--show-ppc-stderr", dest="show_ppc_stderr", action="store_true",
-                   help="do not suppress PPC stderr (shows photons/hits per event; debugging)")
-    p.add_argument("--multipmt", action="store_true",
-                   help="build the multi-PMT ARCA detector (2070 DOMs x 31 PMT) "
-                        "instead of reading --geo")
-    p.add_argument("--output-mode", dest="output_mode", default=None,
-                   help="serializer output mode: minimal|standard|extended "
-                        "(extended adds pmt_id + hit positions)")
+    p.add_argument(
+        "--show-ppc-stderr",
+        dest="show_ppc_stderr",
+        action="store_true",
+        help="do not suppress PPC stderr (shows photons/hits per event; debugging)",
+    )
+    p.add_argument(
+        "--multipmt",
+        action="store_true",
+        help="build the multi-PMT ARCA detector (2070 DOMs x 31 PMT) instead of reading --geo",
+    )
+    p.add_argument(
+        "--output-mode",
+        dest="output_mode",
+        default=None,
+        help="serializer output mode: minimal|standard|extended "
+        "(extended adds pmt_id + hit positions)",
+    )
     return p.parse_args()
 
 
 def main():
     a = parse_args()
     from prometheus import Prometheus, config
+
     try:
         import jax
+
         jax.config.update("jax_enable_x64", True)
         jax.config.update("jax_platform_name", "cpu")
     except Exception:
@@ -86,8 +109,10 @@ def main():
 
     if a.multipmt:
         import sys
+
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from build_arca_multipmt import build_arca_multipmt_detector
+
         Prometheus(detector=build_arca_multipmt_detector()).sim()
     else:
         Prometheus().sim()

@@ -567,9 +567,7 @@ class PPCSimConfig(ConfigBase):
     def __post_init__(self):
         _valid = ("minimal", "standard", "extended")
         if self.output_mode not in _valid:
-            raise ValueError(
-                f"output_mode must be one of {_valid!r}, got {self.output_mode!r}"
-            )
+            raise ValueError(f"output_mode must be one of {_valid!r}, got {self.output_mode!r}")
 
 
 @dataclass

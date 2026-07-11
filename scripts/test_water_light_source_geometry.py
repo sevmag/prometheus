@@ -8,6 +8,7 @@ the source (S-P). Source-facing PMTs dominate first light, so the distribution
 peaks toward 0 deg (cos -> +1), sharper for nearby OMs. Run on mimo in spack env
 `prometheus`.
 """
+
 import argparse
 import importlib.util
 import json
@@ -65,8 +66,11 @@ def run_flasher(binary, tmpdir, str_id, dom_id, num, device=0):
     with open(out, "w") as fo:
         r = subprocess.run(
             [binary, str(str_id), str(dom_id), str(int(num)), str(device)],
-            cwd=tmpdir, stdin=subprocess.DEVNULL, stdout=fo,
-            stderr=subprocess.PIPE, env=env,
+            cwd=tmpdir,
+            stdin=subprocess.DEVNULL,
+            stdout=fo,
+            stderr=subprocess.PIPE,
+            env=env,
         )
     stderr = r.stderr.decode("utf-8", "replace")
     if r.returncode != 0:
@@ -95,8 +99,9 @@ def pick_sources(detector):
     center = keys[int(np.argmin(np.linalg.norm(pos - off, axis=1)))]
     edge = keys[int(np.argmax(np.linalg.norm(pos[:, :2] - off[:2], axis=1)))]
     zmax = pos[:, 2].max()
-    interior = keys[int(np.argmin(
-        np.linalg.norm(pos[:, :2] - off[:2], axis=1) + np.abs(pos[:, 2] - zmax)))]
+    interior = keys[
+        int(np.argmin(np.linalg.norm(pos[:, :2] - off[:2], axis=1) + np.abs(pos[:, 2] - zmax)))
+    ]
     out = []
     for k in (center, edge, interior):
         if k not in out:
@@ -131,8 +136,9 @@ def analyze(detector, pmt_dirs, hits, source_pos, flash_key=None):
         v = source_pos - P
         cos = float(np.dot(n, v) / (np.linalg.norm(n) * np.linalg.norm(v)))
         cos = max(-1.0, min(1.0, cos))
-        rows.append((s, o, p, np.degrees(np.arccos(cos)), cos,
-                     float(np.linalg.norm(source_pos - D))))
+        rows.append(
+            (s, o, p, np.degrees(np.arccos(cos)), cos, float(np.linalg.norm(source_pos - D)))
+        )
     return np.array(rows, dtype=float) if rows else np.empty((0, 6))
 
 
@@ -171,6 +177,7 @@ def plot_source(data_norm, data_pho, source_key, source_pos, outdir, near_m=75.0
     """Primary panel: photon-direction validation (light comes from source).
     Secondary panel: PMT-normal cos (getPMT-confounded). Returns metrics dict."""
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -180,11 +187,23 @@ def plot_source(data_norm, data_pho, source_key, source_pos, outdir, near_m=75.0
     ang, dph = data_pho[:, 3], data_pho[:, 5]
     pn, pf = dph < near_m, ~(dph < near_m)
     if pn.sum():
-        axes[0].hist(ang[pn], bins=36, range=(0, 180), histtype="step",
-                     density=True, label=f"near (<{near_m:.0f} m) N={int(pn.sum())}")
+        axes[0].hist(
+            ang[pn],
+            bins=36,
+            range=(0, 180),
+            histtype="step",
+            density=True,
+            label=f"near (<{near_m:.0f} m) N={int(pn.sum())}",
+        )
     if pf.sum():
-        axes[0].hist(ang[pf], bins=36, range=(0, 180), histtype="step",
-                     density=True, label=f"far N={int(pf.sum())}")
+        axes[0].hist(
+            ang[pf],
+            bins=36,
+            range=(0, 180),
+            histtype="step",
+            density=True,
+            label=f"far N={int(pf.sum())}",
+        )
     axes[0].axvline(0, color="k", ls=":")
     axes[0].set_xlabel("angle(photon dir, source->OM) [deg]  (direct light -> 0)")
     axes[0].set_ylabel("pdf")
@@ -194,19 +213,32 @@ def plot_source(data_norm, data_pho, source_key, source_pos, outdir, near_m=75.0
     cos, dn = data_norm[:, 4], data_norm[:, 5]
     nn, nf = dn < near_m, ~(dn < near_m)
     if nn.sum():
-        axes[1].hist(cos[nn], bins=40, range=(-1, 1), histtype="step",
-                     density=True, label=f"near N={int(nn.sum())}")
+        axes[1].hist(
+            cos[nn],
+            bins=40,
+            range=(-1, 1),
+            histtype="step",
+            density=True,
+            label=f"near N={int(nn.sum())}",
+        )
     if nf.sum():
-        axes[1].hist(cos[nf], bins=40, range=(-1, 1), histtype="step",
-                     density=True, label=f"far N={int(nf.sum())}")
+        axes[1].hist(
+            cos[nf],
+            bins=40,
+            range=(-1, 1),
+            histtype="step",
+            density=True,
+            label=f"far N={int(nf.sum())}",
+        )
     axes[1].axvline(1, color="k", ls=":")
     axes[1].set_xlabel("cos(PMT normal, source)  (face-on -> +1)")
     axes[1].set_ylabel("pdf")
     axes[1].set_title("secondary: PMT-normal (getPMT-confounded)")
     axes[1].legend()
 
-    fig.suptitle(f"ARCA water isotropic flasher | source DOM {source_key} "
-                 f"@ {np.round(source_pos, 1)}")
+    fig.suptitle(
+        f"ARCA water isotropic flasher | source DOM {source_key} @ {np.round(source_pos, 1)}"
+    )
     fig.tight_layout()
     png = os.path.join(outdir, f"light_source_geom_{source_key[0]}_{source_key[1]}.png")
     fig.savefig(png, dpi=120)
@@ -257,8 +289,9 @@ def _smoke():
     upmt = {(h.string_id, h.om_id, h.pmt_id) for h in hits}
     assert hits and hits[0].pmt_id is not None, "no nextgen hits parsed"
     assert other, "no hits on DOMs other than the flashing one"
-    print(f"SMOKE OK: {len(hits)} hits, {len(upmt)} unique PMTs, "
-          f"flash_dom={flash_key}, source={src}")
+    print(
+        f"SMOKE OK: {len(hits)} hits, {len(upmt)} unique PMTs, flash_dom={flash_key}, source={src}"
+    )
 
 
 def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
@@ -278,7 +311,8 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
         data_norm = analyze(det, dirs, hits, source_pos, flash_key=flash_key)
         data_pho = analyze_photon(det, hits, source_pos, flash_key=flash_key)
         png, metrics = plot_source(
-            data_norm, data_pho, flash_key, source_pos, outdir, near_m=near_m)
+            data_norm, data_pho, flash_key, source_pos, outdir, near_m=near_m
+        )
         metrics["png"] = png
         metrics["flasher_configured_at"] = None if src is None else [float(x) for x in src]
         results.append(metrics)
@@ -288,21 +322,31 @@ def main(num=1_000_000_000, device=0, binary=BIN_GPU, near_m=75.0):
         json.dump(results, f, indent=2)
 
     def ok(m):
-        return (m["photon_median_near_deg"] is not None
-                and m["photon_median_near_deg"] < 15.0
-                and m["photon_median_far_deg"] is not None
-                and m["photon_median_near_deg"] < m["photon_median_far_deg"])
+        return (
+            m["photon_median_near_deg"] is not None
+            and m["photon_median_near_deg"] < 15.0
+            and m["photon_median_far_deg"] is not None
+            and m["photon_median_near_deg"] < m["photon_median_far_deg"]
+        )
+
     npass = sum(ok(m) for m in results)
     if npass == len(results) and results:
-        print(f"VERDICT: PASS ({npass}/{len(results)} sources: "
-              "direct light from source, near sharper than far)")
+        print(
+            f"VERDICT: PASS ({npass}/{len(results)} sources: "
+            "direct light from source, near sharper than far)"
+        )
         return 0
-    near = [round(m['photon_median_near_deg'], 2)
-            if m['photon_median_near_deg'] is not None else None for m in results]
-    far = [round(m['photon_median_far_deg'], 2)
-           if m['photon_median_far_deg'] is not None else None for m in results]
-    print(f"VERDICT: FAIL ({npass}/{len(results)}); "
-          f"photon_median_near={near} photon_median_far={far}")
+    near = [
+        round(m["photon_median_near_deg"], 2) if m["photon_median_near_deg"] is not None else None
+        for m in results
+    ]
+    far = [
+        round(m["photon_median_far_deg"], 2) if m["photon_median_far_deg"] is not None else None
+        for m in results
+    ]
+    print(
+        f"VERDICT: FAIL ({npass}/{len(results)}); photon_median_near={near} photon_median_far={far}"
+    )
     return 1
 
 
@@ -313,15 +357,18 @@ if __name__ == "__main__":
     ap.add_argument("--run", action="store_true")
     ap.add_argument("--num", type=float, default=1e9)
     ap.add_argument("--device", type=int, default=0)
-    ap.add_argument("--cpu", action="store_true",
-                    help="use the CPU ppc binary (PPC_NEXTGEN) instead of GPU; "
-                         "1e9 photons is slow on CPU — use a smaller --num")
+    ap.add_argument(
+        "--cpu",
+        action="store_true",
+        help="use the CPU ppc binary (PPC_NEXTGEN) instead of GPU; "
+        "1e9 photons is slow on CPU — use a smaller --num",
+    )
     args = ap.parse_args()
     if args.smoke:
         _smoke()
     elif args.analyze_smoke:
         _analyze_smoke()
     elif args.run:
-        sys.exit(main(num=int(args.num), device=args.device,
-                      binary=BIN_CPU if args.cpu else BIN_GPU))
-
+        sys.exit(
+            main(num=int(args.num), device=args.device, binary=BIN_CPU if args.cpu else BIN_GPU)
+        )

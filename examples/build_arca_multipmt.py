@@ -6,6 +6,7 @@ Every DOM in ``resources/geofiles/arca.geo`` (2070 of them) is turned into a
 identity-orientation PMT pointing directions from
 ``resources/arca_dom_pmt_dirs.csv``.
 """
+
 import os
 
 import numpy as np
@@ -32,9 +33,7 @@ def _load_pmt_dirs(path=DIRS):
     return out
 
 
-def build_arca_multipmt_detector(
-    geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=1.0
-):
+def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=1.0):
     """Build the 2070-DOM, 31-PMT-per-DOM ARCA nextgen detector.
 
     Parameters
@@ -88,7 +87,4 @@ def build_arca_multipmt_detector(
 
 if __name__ == "__main__":
     det = build_arca_multipmt_detector()
-    print(
-        f"built ARCA detector: {len(det.modules)} DOMs, "
-        f"needs_nextgen={det.needs_nextgen()}"
-    )
+    print(f"built ARCA detector: {len(det.modules)} DOMs, needs_nextgen={det.needs_nextgen()}")

@@ -30,6 +30,7 @@ Examples::
     python scripts/make_dx_dat.py --mode uniform --value 0
     python scripts/make_dx_dat.py --mode random --seed 0
 """
+
 import argparse
 import os
 import random
@@ -63,14 +64,16 @@ def main():
     )
     ap.add_argument("--mode", choices=["none", "uniform", "random"], required=True)
     ap.add_argument(
-        "--value", type=float, default=0.0,
+        "--value",
+        type=float,
+        default=0.0,
         help="cable azimuth [deg] for --mode uniform (default 0)",
     )
+    ap.add_argument("--seed", type=int, default=0, help="RNG seed for --mode random (default 0)")
     ap.add_argument(
-        "--seed", type=int, default=0, help="RNG seed for --mode random (default 0)"
-    )
-    ap.add_argument(
-        "--radius", type=float, default=0.2159,
+        "--radius",
+        type=float,
+        default=0.2159,
         help="4th-column r [m]; read but ignored by PPC (default 0.2159)",
     )
     ap.add_argument("--geo", default=GEO_DEFAULT)
@@ -92,9 +95,7 @@ def main():
             azi = args.value if args.mode == "uniform" else rng.uniform(0.0, 360.0)
             f.write(f"{s}\t{om}\t{azi:.4f}\t{args.radius:.4f}\n")
 
-    detail = (
-        f"value={args.value}" if args.mode == "uniform" else f"seed={args.seed}"
-    )
+    detail = f"value={args.value}" if args.mode == "uniform" else f"seed={args.seed}"
     print(f"wrote {args.out}: {len(keys)} DOMs, mode={args.mode} {detail}")
 
 

@@ -118,8 +118,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -134,8 +135,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -150,8 +152,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -168,8 +171,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path, om_dirs_path=str(src))
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -195,8 +199,9 @@ class TestPropagatorSetup:
                 mock.communicate = lambda: (b"", b"")
                 return mock
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _CapturePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _CapturePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -213,8 +218,10 @@ class TestPropagatorSetup:
         particle = _dummy_particle()
         legacy_hits = ["HIT 1 1 100.0 400.0 1.0 2.0 0.5 1.0\n"]
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen(legacy_hits)):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
+            _FakePopen(legacy_hits),
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -233,8 +240,10 @@ class TestPropagatorSetup:
             "HIT 1 1_1 200.0 400.0 1.0 2.0 0.5 1.0\n",
         ]
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen(nextgen_hits)):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
+            _FakePopen(nextgen_hits),
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -308,6 +317,7 @@ class TestPPCIntegration:
 
         p = _Particle()
         from prometheus.lepton_propagation.loss import Loss
+
         p.losses = [Loss(211, 1000.0, np.zeros(3))]
         ppc_sim(p, det, None, cfg)
         return p.hits

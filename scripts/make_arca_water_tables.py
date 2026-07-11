@@ -4,6 +4,7 @@ Optics come from the measured CSVs (patch reads sca_len/abs_len); ice-model
 files are placeholders in the UPSTREAM format (patch overrides sca/abs).
 Depth grid spans ARCA (DOMs map to depth = -z = 2888..3500 m). cfg: HG, g=0.92,
 anisotropy/hole-ice/BFR OFF."""
+
 import math
 import os
 import shutil
@@ -50,24 +51,41 @@ shutil.copy(os.path.join(UP, "icemodel.par"), os.path.join(OUT, "icemodel.par"))
 with open(os.path.join(OUT, "cfg.txt"), "w") as f:
     f.write(
         "# arca water: over-R, eff, HG(0), g, [aniso], [holeice], [aniso2], "
-        "[absaniso]  -- BFR omitted => OFF\n")
-    for v in ["5", "1.0", "0", "0.92", "130.0", "0.0", "0.0", "0.0",
-              "0.03", "100", "0.0", "0.92", "0.0", "0.0", "0.0", "0.0"]:
+        "[absaniso]  -- BFR omitted => OFF\n"
+    )
+    for v in [
+        "5",
+        "1.0",
+        "0",
+        "0.92",
+        "130.0",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.03",
+        "100",
+        "0.0",
+        "0.92",
+        "0.0",
+        "0.0",
+        "0.0",
+        "0.0",
+    ]:
         f.write(v + "\n")
 # 4) wv.dat: Cherenkov(1/lambda^2) x high-QE, CDF over 301..719 nm
 qw, qq = rd(os.path.join(RES, "KM3NeT_QE_jpp_highQE.csv"))
 grid = np.arange(300.0, 720.0 + 1e-6, 10.0)
 qe = np.clip(np.interp(grid, qw, qq), 1e-9, None)
-dens = (1.0 / grid**2) * (qe / 100.0)         # Cherenkov(1/lambda^2) x QE density
+dens = (1.0 / grid**2) * (qe / 100.0)  # Cherenkov(1/lambda^2) x QE density
 cdf = np.concatenate([[0.0], np.cumsum((dens[1:] + dens[:-1]) / 2 * np.diff(grid))])
 cdf /= cdf[-1]
 g2 = [grid[0]]
-c2 = [0.0]                                    # keep only strictly-increasing CDF (drop QE~0 tail)
+c2 = [0.0]  # keep only strictly-increasing CDF (drop QE~0 tail)
 for i in range(1, len(grid)):
     if cdf[i] > c2[-1] + 1e-6:
         g2.append(grid[i])
         c2.append(cdf[i])
-c2[-1] = 1.0                                  # force exact 1 at last kept point
+c2[-1] = 1.0  # force exact 1 at last kept point
 with open(os.path.join(OUT, "wv.dat"), "w") as f:
     for c, wl in zip(c2, g2):
         f.write(f"{c:.8f} {wl:.0f}.\n")
@@ -79,12 +97,12 @@ with open(os.path.join(OUT, "om.dirs"), "w") as f:
         z = 1 - 2 * (i + 0.5) / n
         r = math.sqrt(max(0, 1 - z * z))
         th = ga * i
-        f.write(f"{i} {r*math.cos(th):.6f} {r*math.sin(th):.6f} {z:.6f}\n")
+        f.write(f"{i} {r * math.cos(th):.6f} {r * math.sin(th):.6f} {z:.6f}\n")
 # 6) om.wv_1.0: wavelength_nm  eff_area_cm2 (QE/100 * photocathode area)
 AREA = 45.0
 with open(os.path.join(OUT, "om.wv_1.0"), "w") as f:
     for w, q in zip(qw, qq):
-        f.write(f"{w:.1f} {(q/100.0)*AREA:.6f}\n")
+        f.write(f"{w:.1f} {(q / 100.0) * AREA:.6f}\n")
 # 7) eff-f2k, rnd.txt, as.dat from upstream (parse-compatible)
 for fn in ("eff-f2k", "rnd.txt", "as.dat"):
     shutil.copy(os.path.join(UP, fn), os.path.join(OUT, fn))

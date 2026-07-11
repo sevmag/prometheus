@@ -46,9 +46,7 @@ def parse_ppc(ppc_file: str) -> List[Hit]:
             if nextgen is None:
                 nextgen = line_is_nextgen
             elif nextgen != line_is_nextgen:
-                raise ValueError(
-                    "PPC output mixes legacy and nextgen HIT formats in the same file"
-                )
+                raise ValueError("PPC output mixes legacy and nextgen HIT formats in the same file")
 
             if nextgen:
                 dom_str, pmt_str = tokens[2].split("_", 1)
