@@ -341,7 +341,7 @@ class TestParseToImpactPoint:
     def test_hit_cartesian_uses_impact_position_not_direction(self, tmp_path):
         # A surface-membership check cannot catch the swap (every angle pair
         # lands on the DOM surface), so pin the point to the OM-impact pair
-        # (tokens 7,8) and assert it differs from the direction pair (5,6).
+        # (tokens 5,6) and assert it differs from the direction pair (7,8).
         R = 0.16510
         p = tmp_path / "ppc_out.txt"
         p.write_text("HIT 1 42_1 1234.5 400.0 1.1 2.2 0.5 1.0\n")
@@ -350,5 +350,5 @@ class TestParseToImpactPoint:
         mod = _FakeModule(key=(1, 1), pos=[0.0, 0.0, 0.0], Rr=R, Rz=R)
         got = _hit_cartesian(hit, mod)
 
-        assert got == pytest.approx(_sphere_point(R, 0.5, 1.0), abs=1e-9)
-        assert got != pytest.approx(_sphere_point(R, 1.1, 2.2), abs=1e-3)
+        assert got == pytest.approx(_sphere_point(R, 1.1, 2.2), abs=1e-9)
+        assert got != pytest.approx(_sphere_point(R, 0.5, 1.0), abs=1e-3)

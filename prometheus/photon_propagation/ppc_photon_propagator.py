@@ -28,9 +28,9 @@ def _dump_pmt_diag(diag_path: str, particle, om_conf_path: str) -> None:
     * the parsed per-OM-type PMT pointing directions from ``om.conf`` (to check
       the ``dirs`` are distinct / spread over the sphere), and
     * one line per hit: ``string om pmt_id pth pph dth dph`` where ``pth/pph`` is
-      the PHOTON direction that drives ``getPMT`` selection (HIT tokens 5,6 in
-      ``f2k.cxx:346``; stored as ``Hit.photon_zenith/photon_azimuth``) and
-      ``dth/dph`` is the hit position on the OM (tokens 7,8; stored as
+      the PHOTON direction that drives ``getPMT`` selection (HIT tokens 7,8 in
+      ``f2k.cxx``; stored as ``Hit.photon_zenith/photon_azimuth``) and
+      ``dth/dph`` is the hit position on the OM (tokens 5,6; stored as
       ``Hit.om_zenith/om_azimuth``).
 
     Analyse with ``dir_z = cos(pth)`` (pth in radians -- the raw PPC angle units
