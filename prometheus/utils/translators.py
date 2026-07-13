@@ -72,6 +72,7 @@ int_type_to_str = {
     1000000007: "hadr",
     # What do we do with this ???????
     1000000008: "delta",
+    1000000012: "epair",  # PROPOSAL InteractionType::Annihilation (positron) -> EM cascade
     -2000001006: "hadr",
     2212: "hadr",
 }
