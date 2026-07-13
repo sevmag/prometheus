@@ -17,6 +17,7 @@ Usage::
     python scripts/analyze_pmt_diag.py                       # globs output/pmt_diag_*.txt
     python scripts/analyze_pmt_diag.py a.txt b.txt c.txt     # explicit files
 """
+
 import glob
 import math
 import os
@@ -34,7 +35,7 @@ def arm_label(path):
     base = os.path.basename(path)
     for pre in ("pmt_diag_", "pmt_diag"):
         if base.startswith(pre):
-            base = base[len(pre):]
+            base = base[len(pre) :]
             break
     return base[:-4] if base.endswith(".txt") else base or os.path.basename(path)
 
@@ -43,9 +44,9 @@ def analyze(path):
     """Single streaming pass over a diag file -> metrics dict."""
     total = 0
     pmt_counts = Counter()
-    dom_pmts = {}            # (string, om) -> set of pmt_id
-    pth = array("f")         # compact store of photon-direction zenith
-    type_headers = set()     # dedup identical per-block type lines
+    dom_pmts = {}  # (string, om) -> set of pmt_id
+    pth = array("f")  # compact store of photon-direction zenith
+    type_headers = set()  # dedup identical per-block type lines
 
     with open(path) as f:
         for line in f:
@@ -111,8 +112,10 @@ def print_table(metrics):
         ("hits", lambda m: _fmt(m, "hits", "{:,}")),
         ("DOMs lit", lambda m: _fmt(m, "doms", "{:,}")),
         (f"PMTs used /{N_PMT}", lambda m: _fmt(m, "n_pmt_used")),
-        ("top PMT (id: %)",
-         lambda m: f"{m['top_pmt']}: {100 * m['top_frac']:.1f}%" if "top_pmt" in m else "-"),
+        (
+            "top PMT (id: %)",
+            lambda m: f"{m['top_pmt']}: {100 * m['top_frac']:.1f}%" if "top_pmt" in m else "-",
+        ),
         ("PMTs/DOM mean", lambda m: _fmt(m, "pmts_per_dom_mean", "{:.2f}")),
         ("PMTs/DOM max", lambda m: _fmt(m, "pmts_per_dom_max")),
         ("dir_z min", lambda m: _fmt(m, "dirz_min", "{:+.3f}")),
@@ -145,24 +148,39 @@ def verdict(metrics):
         return m and m.get("top_frac", 0) > 0.5 and m.get("n_pmt_used", 99) <= 5
 
     if none and uni and none.get("hits") and uni.get("hits"):
-        same = (none["n_pmt_used"] == uni["n_pmt_used"]
-                and none.get("top_pmt") == uni.get("top_pmt")
-                and abs(none["top_frac"] - uni["top_frac"]) < 0.01)
-        print("  - uniform " + ("==" if same else "!=") + " none  ->  "
-              + ("dx.dat=0 is a NO-OP, as predicted (identity rotation)."
-                 if same else "uniform differs from none (unexpected; check cable/om.conf)."))
+        same = (
+            none["n_pmt_used"] == uni["n_pmt_used"]
+            and none.get("top_pmt") == uni.get("top_pmt")
+            and abs(none["top_frac"] - uni["top_frac"]) < 0.01
+        )
+        print(
+            "  - uniform "
+            + ("==" if same else "!=")
+            + " none  ->  "
+            + (
+                "dx.dat=0 is a NO-OP, as predicted (identity rotation)."
+                if same
+                else "uniform differs from none (unexpected; check cable/om.conf)."
+            )
+        )
     if rnd and rnd.get("hits"):
         if dominates(rnd):
-            print("  - random STILL collapses -> cable clocking is not the cause; "
-                  "the zenith-ring selection / frame is (getPMT ignores tilt).")
+            print(
+                "  - random STILL collapses -> cable clocking is not the cause; "
+                "the zenith-ring selection / frame is (getPMT ignores tilt)."
+            )
         else:
-            print("  - random spreads the hits -> per-DOM cable azimuth matters; "
-                  "a real dx.dat (not uniform 0) is needed.")
+            print(
+                "  - random spreads the hits -> per-DOM cable azimuth matters; "
+                "a real dx.dat (not uniform 0) is needed."
+            )
     for lbl in ("none", "uniform", "random"):
         m = by.get(lbl)
         if m and m.get("hits") and m.get("dirz_std", 0) > 0.2 and dominates(m):
-            print(f"  - {lbl}: photon dir_z varies (std={m['dirz_std']:.2f}) but PMTs "
-                  f"collapse -> bug is downstream of photon transport, in assignment.")
+            print(
+                f"  - {lbl}: photon dir_z varies (std={m['dirz_std']:.2f}) but PMTs "
+                f"collapse -> bug is downstream of photon transport, in assignment."
+            )
             break
 
 

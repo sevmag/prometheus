@@ -18,7 +18,6 @@ from prometheus.detector.medium import Medium
 from prometheus.detector.module import Module
 from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
 
-
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
 # ---------------------------------------------------------------------------
@@ -41,10 +40,7 @@ def _nextgen_det(n=3):
 
 def _legacy_det(n=3):
     """A legacy detector (all modules module_type == -1)."""
-    mods = [
-        Module(pos=np.array([0.0, 0.0, float(i) * 17.0]), key=(1, i + 1))
-        for i in range(n)
-    ]
+    mods = [Module(pos=np.array([0.0, 0.0, float(i) * 17.0]), key=(1, i + 1)) for i in range(n)]
     return Detector(mods, Medium.ICE)
 
 
@@ -99,27 +95,23 @@ class _CapturePopen:
     def __init__(self):
         self.env = {}
 
-    def __call__(self, cmd, shell, stdout, env):
+    def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
         self.env.clear()
         self.env.update(env or {})
-        # Command form: "ppc N < input > output 2>/dev/null"
+        # Command form: "ppc N < input > output"
         output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
         open(output_path, "w").close()
         mock = MagicMock()
         mock.returncode = 0
-        mock.wait = lambda: None
+        mock.communicate = lambda: (b"", b"")
         return mock
 
 
 def _run(det, cfg, popen):
     """Drive ppc_sim with the PPC binary + serializers mocked out."""
     particle = _dummy_particle()
-    with patch(
-        "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", popen
-    ):
-        with patch(
-            "prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"
-        ):
+    with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", popen):
+        with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
             with patch.object(det, "to_f2k"):
                 try:
                     ppc_sim(particle, det, None, cfg)
@@ -216,6 +208,6 @@ class TestLegacyPathUnchanged:
         assert det.needs_nextgen() is False
         _run(det, _make_config(ppc_tmpdir, ppctables), _CapturePopen())
         for name in ("om.conf", "om.map", "om.dirs", "om.wv_1.0", "eff-f2k"):
-            assert not (
-                ppc_tmpdir / name
-            ).exists(), f"{name} must not be staged for a legacy detector"
+            assert not (ppc_tmpdir / name).exists(), (
+                f"{name} must not be staged for a legacy detector"
+            )

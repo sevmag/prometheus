@@ -102,6 +102,7 @@ def test_ice_unset_defaults_to_ppc(tmp_path, monkeypatch):
 # Fallback runner: `python3 tests/test_config_mims_water_ppc.py` (no pytest)
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
+
     def _plain_setattr(obj, name, value):
         setattr(obj, name, value)
 

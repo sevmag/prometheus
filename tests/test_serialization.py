@@ -11,7 +11,6 @@ from prometheus.utils.serialization.serialize_particles_to_awkward import (
     serialize_particles_to_awkward,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fake detector / injection helpers
 # ---------------------------------------------------------------------------
@@ -149,6 +148,7 @@ class TestMinimalMode:
         det, inj = _simple_setup(time=999.9)
         result = serialize_particles_to_awkward(det, inj, output_mode="minimal")
         import awkward as ak
+
         assert ak.to_list(result["t"])[0][0] == pytest.approx(999.9)
 
 
@@ -182,16 +182,19 @@ class TestStandardMode:
 
     def test_pmt_id_value_set(self):
         import awkward as ak
+
         result = self._get(pmt_id=1)
         assert ak.to_list(result["pmt_id"])[0][0] == 1
 
     def test_pmt_id_none_for_legacy(self):
         import awkward as ak
+
         result = self._get(pmt_id=None)
         assert ak.to_list(result["pmt_id"])[0][0] is None
 
     def test_wavelength_value(self):
         import awkward as ak
+
         result = self._get(wavelength=420.0)
         assert ak.to_list(result["wavelength"])[0][0] == pytest.approx(420.0)
 
@@ -221,6 +224,7 @@ class TestExtendedMode:
 
     def test_spherical_impact_on_surface(self):
         import awkward as ak
+
         R = 0.16510
         result = self._get(Rr=R, Rz=R, om_zenith=np.pi / 3, om_azimuth=np.pi / 4)
         hx = ak.to_list(result["hit_x"])[0][0]
@@ -231,6 +235,7 @@ class TestExtendedMode:
 
     def test_spheroid_impact_on_surface(self):
         import awkward as ak
+
         Rr, Rz = 0.150, 0.267
         om_zenith = np.pi / 4
         om_azimuth = np.pi / 6
@@ -243,6 +248,7 @@ class TestExtendedMode:
 
     def test_cylinder_impact_at_wall(self):
         import awkward as ak
+
         Rr = 0.06
         result = self._get(Rr=Rr, Rz=-0.38, om_zenith=np.pi / 3, om_azimuth=1.0)
         hx = ak.to_list(result["hit_x"])[0][0]
@@ -252,6 +258,7 @@ class TestExtendedMode:
 
     def test_cylinder_z_in_range(self):
         import awkward as ak
+
         Rz = -0.38
         for om_zenith in np.linspace(0.01, np.pi - 0.01, 9):
             result = self._get(Rr=0.06, Rz=Rz, om_zenith=om_zenith, om_azimuth=0.5)
@@ -260,6 +267,7 @@ class TestExtendedMode:
 
     def test_none_angles_produces_none_coords(self):
         import awkward as ak
+
         det, inj = _simple_setup(om_zenith=None, om_azimuth=None)
         result = serialize_particles_to_awkward(det, inj, output_mode="extended")
         hx = ak.to_list(result["hit_x"])[0][0]

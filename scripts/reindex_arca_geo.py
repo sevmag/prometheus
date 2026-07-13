@@ -7,6 +7,7 @@ PPC's reserved str==0 flasher encoding no longer collides with a real string.
 Idempotent: refuses to run if the geo is already 1-based (min string id != 0).
 Positions (x/y/z) are left byte-identical.
 """
+
 import argparse
 import os
 import sys
@@ -34,8 +35,10 @@ def reindex(path):
     if not rows:
         sys.exit(f"no module rows after header in {path}")
     if min(strs) != 0 or min(oms) != 0:
-        sys.exit(f"refusing: geo not 0-based (min string={min(strs)}, min om={min(oms)}); "
-                 "already migrated?")
+        sys.exit(
+            f"refusing: geo not 0-based (min string={min(strs)}, min om={min(oms)}); "
+            "already migrated?"
+        )
 
     for i in rows:
         c = lines[i].rstrip("\n").split("\t")
@@ -46,9 +49,11 @@ def reindex(path):
     with open(path, "w") as f:
         f.writelines(lines)
 
-    print(f"reindexed {len(rows)} modules in {path}: "
-          f"strings {min(strs)}..{max(strs)} -> {min(strs)+1}..{max(strs)+1}, "
-          f"oms {min(oms)}..{max(oms)} -> {min(oms)+1}..{max(oms)+1}")
+    print(
+        f"reindexed {len(rows)} modules in {path}: "
+        f"strings {min(strs)}..{max(strs)} -> {min(strs) + 1}..{max(strs) + 1}, "
+        f"oms {min(oms)}..{max(oms)} -> {min(oms) + 1}..{max(oms) + 1}"
+    )
 
 
 if __name__ == "__main__":

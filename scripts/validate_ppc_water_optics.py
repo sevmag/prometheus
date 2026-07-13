@@ -8,13 +8,19 @@ refractive index. Prints "ALL OPTICS CHECKS PASS" on success.
 
 Usage:  python3 validate_ppc_water_optics.py
 """
-import os, subprocess, tempfile, shutil, numpy as np
+
+import os
+import shutil
+import subprocess
+import tempfile
+
+import numpy as np
 
 PR = "/n/holylfs05/LABS/arguelles_delgado_lab/Everyone/pzhelnin/prometheus"
 BIN = os.path.join(PR, "resources/PPC_executables/PPC_NEXTGEN/ppc")
 TAB = os.path.join(PR, "resources/PPC_tables/arca_water")
-A01, A2, A3, A4 = 1.32321, 16.2566, -4382.0, 1.1455e6           # Mediterranean n constants
-TOL = 2.0                                                       # percent
+A01, A2, A3, A4 = 1.32321, 16.2566, -4382.0, 1.1455e6  # Mediterranean n constants
+TOL = 2.0  # percent
 
 
 def rd(p):
@@ -23,7 +29,9 @@ def rd(p):
         ln = ln.strip()
         if not ln or ln[0] == "#" or ln[0].isalpha():
             continue
-        a, b = ln.split(","); xs.append(float(a)); ys.append(float(b))
+        a, b = ln.split(",")
+        xs.append(float(a))
+        ys.append(float(b))
     o = np.argsort(xs)
     return np.array(xs)[o], np.array(ys)[o]
 
@@ -38,23 +46,40 @@ def main():
             f.write("D1_1\t0x1\t0.0\t0.0\t-3200.0\t1\t1\n")
             f.write("D1_2\t0x2\t0.0\t0.0\t-3220.0\t1\t2\n")
         env = dict(os.environ, PPC_DUMP_OPTICS="1", PPCTABLESDIR=tmp)
-        r = subprocess.run([BIN, "0"], cwd=tmp, stdin=subprocess.DEVNULL,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
-        rows = sorted({(float(p[1]), float(p[2]), float(p[3]), float(p[4]))
-                       for p in (ln.split() for ln in r.stderr.decode().splitlines())
-                       if p and p[0] == "OPTICS"})
+        r = subprocess.run(
+            [BIN, "0"],
+            cwd=tmp,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+        rows = sorted(
+            {
+                (float(p[1]), float(p[2]), float(p[3]), float(p[4]))
+                for p in (ln.split() for ln in r.stderr.decode().splitlines())
+                if p and p[0] == "OPTICS"
+            }
+        )
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
     if not rows:
-        print("FAIL: no OPTICS lines (is PPC_DUMP_OPTICS wired in?)"); return 1
-    ws = wa = 0.0; nbad = 0; n400 = None
+        print("FAIL: no OPTICS lines (is PPC_DUMP_OPTICS wired in?)")
+        return 1
+    ws = wa = 0.0
+    nbad = 0
+    n400 = None
     for w, ls, la, n in rows:
         if w < 305 or w > 715:
             continue
-        cs = float(np.interp(w, sw, sl)); ca = float(np.interp(w, aw, al))
-        es = abs(ls - cs) / cs * 100; ea = abs(la - ca) / ca * 100
-        ws = max(ws, es); wa = max(wa, ea); nbad += (es > TOL or ea > TOL)
+        cs = float(np.interp(w, sw, sl))
+        ca = float(np.interp(w, aw, al))
+        es = abs(ls - cs) / cs * 100
+        ea = abs(la - ca) / ca * 100
+        ws = max(ws, es)
+        wa = max(wa, ea)
+        nbad += es > TOL or ea > TOL
         if abs(w - 400) < 6:
             n400 = n
     nmed = A01 + (A2 + (A3 + A4 / 400.0) / 400.0) / 400.0

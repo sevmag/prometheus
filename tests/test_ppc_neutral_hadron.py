@@ -5,18 +5,20 @@ These tests need no PPC binary/GPU. The deposit tests monkeypatch
 (the should_propagate gate sits after the deposit and before the PPC
 subprocess), letting us inspect particle.losses directly.
 """
+
 import numpy as np
 import pytest
 
 import prometheus.photon_propagation.ppc_photon_propagator as ppc_mod
-from prometheus.particle import PropagatableParticle
 from prometheus.lepton_propagation import Loss
+from prometheus.particle import PropagatableParticle
 from prometheus.utils import serialize_to_f2k
 from prometheus.utils.translators import int_type_to_str
 
 
 class _FakeDetector:
     """Minimal stand-in exposing only what ppc_sim's dispatch reads."""
+
     offset = np.zeros(3)
     outer_radius = 100.0  # r_inice = outer_radius + 1000 = 1100 m
 

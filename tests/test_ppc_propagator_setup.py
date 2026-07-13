@@ -7,8 +7,6 @@ gated behind ``--run-slow``.
 
 import os
 import shutil
-import textwrap
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -18,7 +16,6 @@ from prometheus.detector.detector import Detector
 from prometheus.detector.medium import Medium
 from prometheus.detector.module import Module
 from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
-
 
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
@@ -68,7 +65,6 @@ def _make_config(tmp_path, om_dirs_path=""):
 
 def _dummy_particle():
     """Return a particle-like object that skips the lepton propagation branch."""
-    from prometheus.particle import PropagatableParticle
     import numpy as np
 
     # Use a charged pion (211) so ppc_sim creates a point-deposition loss.
@@ -99,16 +95,15 @@ class _FakePopen:
     def __init__(self, hit_lines=None):
         self._lines = hit_lines or []
 
-    def __call__(self, cmd, shell, stdout, env):
-        # Strip stderr redirect before finding the stdout redirect target.
-        # Command form: "ppc N < input > output 2>/dev/null"
+    def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
+        # Command form: "ppc N < input > output"
         output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
         with open(output_path, "w") as f:
             for line in self._lines:
                 f.write(line)
         mock = MagicMock()
         mock.returncode = 0
-        mock.wait = lambda: None
+        mock.communicate = lambda: (b"", b"")
         return mock
 
 
@@ -123,8 +118,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -139,8 +135,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -155,8 +152,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path)
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -173,8 +171,9 @@ class TestPropagatorSetup:
         cfg = _make_config(tmp_path, om_dirs_path=str(src))
         particle = _dummy_particle()
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _FakePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -191,17 +190,18 @@ class TestPropagatorSetup:
         captured_env = {}
 
         class _CapturePopen:
-            def __call__(self, cmd, shell, stdout, env):
+            def __call__(self, cmd, shell=None, stdout=None, stderr=None, env=None, **kwargs):
                 captured_env.update(env or {})
-                output_path = cmd.split(">")[-1].strip().split()[0]
+                output_path = cmd.split("2>")[0].split(">")[-1].strip().split()[0]
                 open(output_path, "w").close()
                 mock = MagicMock()
                 mock.returncode = 0
-                mock.wait = lambda: None
+                mock.communicate = lambda: (b"", b"")
                 return mock
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _CapturePopen()):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen", _CapturePopen()
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -218,8 +218,10 @@ class TestPropagatorSetup:
         particle = _dummy_particle()
         legacy_hits = ["HIT 1 1 100.0 400.0 1.0 2.0 0.5 1.0\n"]
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen(legacy_hits)):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
+            _FakePopen(legacy_hits),
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -238,8 +240,10 @@ class TestPropagatorSetup:
             "HIT 1 1_1 200.0 400.0 1.0 2.0 0.5 1.0\n",
         ]
 
-        with patch("prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
-                   _FakePopen(nextgen_hits)):
+        with patch(
+            "prometheus.photon_propagation.ppc_photon_propagator.subprocess.Popen",
+            _FakePopen(nextgen_hits),
+        ):
             with patch("prometheus.photon_propagation.ppc_photon_propagator.serialize_to_f2k"):
                 with patch.object(det, "to_f2k"):
                     try:
@@ -276,7 +280,6 @@ class TestPPCIntegration:
     def _run_ppc(self, tmp_path, det, tables_dir, ppc_exe, om_dirs=""):
         """Run a minimal PPC simulation and return hits."""
         from prometheus.photon_propagation.ppc_photon_propagator import ppc_sim
-        import shutil
 
         # Copy tables
         sim_dir = tmp_path / "tables"
@@ -314,6 +317,7 @@ class TestPPCIntegration:
 
         p = _Particle()
         from prometheus.lepton_propagation.loss import Loss
+
         p.losses = [Loss(211, 1000.0, np.zeros(3))]
         ppc_sim(p, det, None, cfg)
         return p.hits
