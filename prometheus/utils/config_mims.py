@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from ..injection.interactions import INTERACTION_DICT
+from .earth_consistency import check_detector_earth_consistency
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,18 @@ def config_mims(config, detector) -> None:
         detector,
         earth_model_file,
     )
+
+    if config.detector.check_earth_consistency:
+        # Check the resolved paths so a user-supplied earth_model_location
+        # override is validated, not the default it replaced.
+        lp_paths = config.lepton_propagator[config.lepton_propagator.name].paths
+        earth_paths = [lp_paths.earth_model_location]
+        inj_cfg = config.injection[config.injection.name]
+        inj_earth = getattr(inj_cfg.paths, "earth_model_location", None)
+        if inj_cfg.inject and inj_earth is not None and inj_earth not in earth_paths:
+            earth_paths.append(inj_earth)
+        for earth_path in earth_paths:
+            check_detector_earth_consistency(detector, earth_path)
 
     photon_prop_config_mims(config.photon_propagator, output_prefix)
     check_consistency(config)

@@ -33,7 +33,10 @@ def _make_config(geo_file, storage_prefix, earth_model=None):
             outfile="out.parquet",
             nevents=1,
         ),
-        detector=SimpleNamespace(geo_file=geo_file, offset=None, earth_model=earth_model),
+        detector=SimpleNamespace(
+            geo_file=geo_file, offset=None, earth_model=earth_model,
+            check_earth_consistency=False,
+        ),
         injection=_Indexable(name="ranged", ranged=SimpleNamespace()),
         lepton_propagator=_Indexable(name="proposal", proposal=SimpleNamespace()),
     )

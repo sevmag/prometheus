@@ -206,13 +206,19 @@ class RunConfig(ConfigBase):
 
 @dataclass
 class DetectorConfig(ConfigBase):
-    """Detector configuration."""
+    """Detector configuration.
+
+    ``check_earth_consistency`` validates every module against the resolved
+    earth model's shells; disable only for deliberately synthetic pairings
+    (e.g. the demo geofiles, whose depths exceed the generic water column).
+    """
 
     geo_file: Optional[str] = None
     offset: Optional[list] = None
     # site key ("arca"), file name, or absolute path; inferred from the geo
     # file name when unset
     earth_model: Optional[str] = None
+    check_earth_consistency: bool = True
 
     _KEY_MAP: ClassVar[dict[str, str]] = {
         "geo file": "geo_file",
