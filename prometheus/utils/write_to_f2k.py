@@ -82,8 +82,11 @@ def serialize_to_f2k(particle, fname):
         "delta," "brems," "epair," "e+,", "e-," and "e" for electromagnetic cascades,
         and "munu" and "hadr" for hadronic cascades.
     - ``x``, ``y`` and ``z`` are the vector components of the track's initial position in meters.
-    - The quantities ``theta`` and ``phi`` are the track's theta and phi angle
-      in degrees, respectively.
+    - The quantities ``theta`` and ``phi`` are the polar and azimuthal angle
+      of the track's travel direction, in RADIANS. This deviates from the
+      stock f2000 specification (degrees, origin direction): the vendored PPC
+      parsers are patched to consume radians of the travel direction, so
+      these angles must not be converted to the f2000 convention.
     - ``length`` is the length of the track in meters.
         - It is only required for muons because cascades are treated as point-like sources.
     - ``energy`` is the track's initial energy in GeV.
