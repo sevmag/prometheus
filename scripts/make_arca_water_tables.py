@@ -11,11 +11,25 @@ import shutil
 
 import numpy as np
 
-PR = "/n/holylfs05/LABS/arguelles_delgado_lab/Everyone/pzhelnin/prometheus"
+PR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(PR, "resources")
 OUT = os.path.join(RES, "PPC_tables", "arca_water")
-UP = os.path.join(RES, "PPC_src", "ppc_upstream", "ice", "spice_ftp-v3m")
+# icemodel.par, rnd.txt and as.dat are verbatim copies of icecube/ppc's
+# ice/spice_ftp-v3m. PPC_UPSTREAM_ICE may point at that directory in an
+# icecube/ppc checkout to refresh them; unset, the copies shipped in OUT are kept.
+UP = os.environ.get("PPC_UPSTREAM_ICE")
 os.makedirs(OUT, exist_ok=True)
+
+
+def upstream_copy(fn):
+    dst = os.path.join(OUT, fn)
+    if UP:
+        shutil.copy(os.path.join(UP, fn), dst)
+    elif not os.path.exists(dst):
+        raise SystemExit(
+            f"{fn} is missing from {OUT} and PPC_UPSTREAM_ICE is not set; "
+            "point it at ice/spice_ftp-v3m in an icecube/ppc checkout"
+        )
 
 
 def rd(p):
@@ -45,8 +59,8 @@ with open(os.path.join(OUT, "abs_len.dat"), "w") as f:
 with open(os.path.join(OUT, "icemodel.dat"), "w") as f:
     for d in range(500, 4001, 100):
         f.write(f"{d}.0 0.02 0.01 0.0\n")
-# icemodel.par: copy upstream (parses; values unused after patch)
-shutil.copy(os.path.join(UP, "icemodel.par"), os.path.join(OUT, "icemodel.par"))
+# icemodel.par: upstream verbatim (parses; values unused after patch)
+upstream_copy("icemodel.par")
 # 3) cfg.txt: 16 values -> HG, g=0.92, hole-ice/anisotropy/BFR OFF
 with open(os.path.join(OUT, "cfg.txt"), "w") as f:
     f.write(
@@ -72,6 +86,11 @@ with open(os.path.join(OUT, "cfg.txt"), "w") as f:
         "0.0",
     ]:
         f.write(v + "\n")
+    f.write(
+        "# seawater density [g/cm^3], water mode only "
+        "(read as v[16] when sca_len/abs_len present)\n"
+    )
+    f.write("1.04\n")
 # 4) wv.dat: Cherenkov(1/lambda^2) x high-QE, CDF over 301..719 nm
 qw, qq = rd(os.path.join(RES, "KM3NeT_QE_jpp_highQE.csv"))
 grid = np.arange(300.0, 720.0 + 1e-6, 10.0)
@@ -103,8 +122,12 @@ AREA = 45.0
 with open(os.path.join(OUT, "om.wv_1.0"), "w") as f:
     for w, q in zip(qw, qq):
         f.write(f"{w:.1f} {(q / 100.0) * AREA:.6f}\n")
-# 7) eff-f2k, rnd.txt, as.dat from upstream (parse-compatible)
-for fn in ("eff-f2k", "rnd.txt", "as.dat"):
-    shutil.copy(os.path.join(UP, fn), os.path.join(OUT, fn))
+# 7) rnd.txt, as.dat from upstream (parse-compatible).
+# No eff-f2k: the upstream one is IceCube's DeepCore high-QE list (strings
+# 36-86), whose keys collide with ARCA string numbering and route those DOMs
+# to a nonexistent om.wv_1.1 table, silently dropping all their hits. With no
+# eff-f2k every DOM gets rde=1, wavelength-type 0, which is what ARCA needs.
+for fn in ("rnd.txt", "as.dat"):
+    upstream_copy(fn)
 print("wrote", OUT)
 print("files:", sorted(os.listdir(OUT)))
