@@ -571,7 +571,10 @@ void f2k(){
     const char * str = "TR %d %d %31s %f %f %f %f %f %f %f %f";
 
     if(sscanf(in.c_str(), str, &gens, &igen, name, &x, &y, &z, &th, &ph, &l, &E, &t)==11){
-      th=fcv*(180-th); ph=fcv*(ph<180?ph+180:ph-180);
+      // Prometheus feeds theta/phi in radians of the travel direction
+      // (utils/write_to_f2k.py), so the f2000 degrees+origin-flip
+      // conversion must stay disabled, as in PPC/PPC_CUDA.
+      // th=fcv*(180-th); ph=fcv*(ph<180?ph+180:ph-180);
       float costh=cosf(th), sinth=sinf(th), cosph=cosf(ph), sinph=sinf(ph);
       p.q=flne; p.n.x=sinth*cosph; p.n.y=sinth*sinph; p.n.z=costh;
       if(0==strcmp(name, "amu+") || 0==strcmp(name, "amu-") || 0==strcmp(name, "amu")) type=0;
