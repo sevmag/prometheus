@@ -33,7 +33,7 @@ def _load_pmt_dirs(path=DIRS):
     return out
 
 
-def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=1.0):
+def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=5.53):
     """Build the 2070-DOM, 31-PMT-per-DOM ARCA nextgen detector.
 
     Parameters
@@ -51,7 +51,14 @@ def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, b
         sensitivity (resources/PPC_tables/arca_water/km3net_as.dat) in nextgen
         multi-PMT mode. Pass beta=0.49 to fall back to the legacy analytic curve.
     area : float
-        Overall efficiency scaling factor written to om.conf.
+        Overall light-collection scale written to om.conf, in PPC's internal
+        units of one nominal IceCube DOM (pi*(0.1651 m)^2 x 0.336 average
+        angular sensitivity, about 287 cm^2). The default 5.53 is the measured
+        ARCA value: it closes PPC cascade yields against a first-principles
+        expectation (Frank-Tamm x KM3NeT absorption x om.wv_1.0 x real PMT
+        directions) to 1.00 +- 3% across 100 GeV-1 TeV and 10-20 m, and agrees
+        with the photocathode-area ratio 31 x 45 cm^2 / 287 cm^2 = 4.85 to
+        ~15%. Derivation and toys: prometheus-docs yield-check ANCHOR_RESULTS.
 
     Returns
     -------
