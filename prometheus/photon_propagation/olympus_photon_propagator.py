@@ -176,17 +176,14 @@ class OlympusPhotonPropagator(PhotonPropagator):
             )
 
         hits = []
-        nstrings = len(set([mod.key[0] for mod in self.detector.modules]))
-        string_idx = 0
-        om_idx = 0
-        oms_per_string = len(self.detector.modules) / nstrings
-        for dom_hits in res_event:
-            if om_idx == oms_per_string:
-                om_idx = 0
-                string_idx += 1
+        # res_event holds one hit-time array per module, in self.detector.modules
+        # order (the order module_coords is built in). Hits must carry the
+        # module's real (string, om) key: fabricated 0-based counters only match
+        # detectors whose geo file uses 0-based contiguous numbering and mis-key
+        # every other geometry (e.g. arca.geo counts OMs from 1).
+        for mod, dom_hits in zip(self.detector.modules, res_event):
             for hit in dom_hits:
-                hits.append(Hit(string_idx, om_idx, float(hit), None, None, None, None, None))
-            om_idx += 1
+                hits.append(Hit(mod.key[0], mod.key[1], float(hit), None, None, None, None, None))
         particle.hits = hits
         for child in particle.children:
             if child.e < 1:
