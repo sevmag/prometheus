@@ -27,7 +27,7 @@
 #define WNUM   512   // number of wavelength slices
 #define MAXLYS 172   // maximum number of ice layers
 #define MAXGEO 16384 // maximum number of OMs
-#define MAXRND 131072 // max. number of random number multipliers
+#define MAXRND 150000 // max. number of random number multipliers; fits the largest shipped rnd.txt
 
 // #define DTMN
 #define XXX 1.e-5f
