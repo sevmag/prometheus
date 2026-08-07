@@ -73,7 +73,7 @@ namespace xppc{
 
     {
       unsigned int size=d.rsize, need=seed+1;
-      if(size<need) cerr<<"Error: not enough multipliers: asked for "<<seed<<"-th out of "<<size<<"!"<<endl;
+      if(size<need){ cerr<<"Error: not enough multipliers: asked for "<<seed<<"-th out of "<<size<<"!"<<endl; exit(1); }
     }
   }
 
@@ -193,7 +193,7 @@ namespace xppc{
 
       {
 	unsigned int size=d.rsize;
-	if(size<ntot) cerr<<"Error: not enough multipliers: only have "<<size<<" (need "<<ntot<<")!"<<endl;
+	if(size<ntot){ cerr<<"Error: not enough multipliers: only have "<<size<<" (need "<<ntot<<")!"<<endl; exit(1); }
 	else d.rsize=ntot;
       }
 
@@ -272,7 +272,7 @@ namespace xppc{
 	  else threadMin=-1, threadMax=-1;
 	}
 
-	if(d.hidx>d.hnum){ cerr<<"Error: data buffer overflow occurred: "<<d.hidx<<">"<<d.hnum<<"!"<<endl; d.hidx=d.hnum; }
+	if(d.hidx>d.hnum){ cerr<<"Error: data buffer overflow occurred: "<<d.hidx<<">"<<d.hnum<<"!"<<endl; exit(1); }
       }
 
       {
@@ -439,7 +439,7 @@ namespace xppc{
       for(d.blockIdx=0, d.gridDim=nblk, blockDim.x=nthr; d.blockIdx<d.gridDim; d.blockIdx++)
 	for(threadIdx.x=0; threadIdx.x<blockDim.x; threadIdx.x++) propagate(e, num);
 
-      if(d.hidx>d.hnum){ cerr<<"Error: data buffer overflow occurred: "<<d.hidx<<">"<<d.hnum<<"!"<<endl; d.hidx=d.hnum; }
+      if(d.hidx>d.hnum){ cerr<<"Error: data buffer overflow occurred: "<<d.hidx<<">"<<d.hnum<<"!"<<endl; exit(1); }
 #else
       for(vector<gpu>::iterator i=gpus.begin(); i!=gpus.end(); i++) i->set(), i->kernel_i();
 #endif
