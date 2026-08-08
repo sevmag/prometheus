@@ -118,7 +118,12 @@ with open(os.path.join(OUT, "om.dirs"), "w") as f:
         th = ga * i
         f.write(f"{i} {r * math.cos(th):.6f} {r * math.sin(th):.6f} {z:.6f}\n")
 # 6) om.wv_1.0: wavelength_nm  eff_area_cm2 (QE/100 * photocathode area)
-AREA = 45.0
+# Jpp JPhysics/KM3NeT.hh getPhotocathodeArea(): the collection area per PMT
+# that the collaboration's own simulation pairs with exactly this QE table and
+# angular-acceptance curve (normalized to 1 head-on, collection efficiency
+# folded into QE). Larger than the bare 3" photocathode (~45 cm^2) because it
+# includes the reflector-ring gain.
+AREA = 70.768818
 with open(os.path.join(OUT, "om.wv_1.0"), "w") as f:
     for w, q in zip(qw, qq):
         f.write(f"{w:.1f} {(q / 100.0) * AREA:.6f}\n")
