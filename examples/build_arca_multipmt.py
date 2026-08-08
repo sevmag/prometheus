@@ -56,9 +56,13 @@ def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, b
         angular sensitivity, about 287 cm^2). The default 5.53 is the measured
         ARCA value: it closes PPC cascade yields against a first-principles
         expectation (Frank-Tamm x KM3NeT absorption x om.wv_1.0 x real PMT
-        directions) to 1.00 +- 3% across 100 GeV-1 TeV and 10-20 m, and agrees
-        with the photocathode-area ratio 31 x 45 cm^2 / 287 cm^2 = 4.85 to
-        ~15%. Derivation and toys: prometheus-docs yield-check ANCHOR_RESULTS.
+        directions) to 1.00 +- 3% across 100 GeV-1 TeV and 10-20 m. The
+        closure holds unchanged for any om.wv_1.0 absolute scale because PPC
+        folds om.wv into its absolute efficiency (verified by re-closing at
+        0.98-1.03 after om.wv moved from the bare 45 cm^2 photocathode to
+        Jpp's 70.77 cm^2 collection area): area is the residual PPC-units
+        conversion on top of om.wv, not a photocathode-area ratio.
+        Derivation and toys: prometheus-docs yield-check ANCHOR_RESULTS.
 
     Returns
     -------
