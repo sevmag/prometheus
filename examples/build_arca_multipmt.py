@@ -33,7 +33,7 @@ def _load_pmt_dirs(path=DIRS):
     return out
 
 
-def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=5.53):
+def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, beta=-3.0, area=0.0):
     """Build the 2070-DOM, 31-PMT-per-DOM ARCA nextgen detector.
 
     Parameters
@@ -51,18 +51,16 @@ def build_arca_multipmt_detector(geo=GEO, module_type=1, Rr=0.2159, Rz=0.2159, b
         sensitivity (resources/PPC_tables/arca_water/km3net_as.dat) in nextgen
         multi-PMT mode. Pass beta=0.49 to fall back to the legacy analytic curve.
     area : float
-        Overall light-collection scale written to om.conf, in PPC's internal
-        units of one nominal IceCube DOM (pi*(0.1651 m)^2 x 0.336 average
-        angular sensitivity, about 287 cm^2). The default 5.53 is the measured
-        ARCA value: it closes PPC cascade yields against a first-principles
-        expectation (Frank-Tamm x KM3NeT absorption x om.wv_1.0 x real PMT
-        directions) to 1.00 +- 3% across 100 GeV-1 TeV and 10-20 m. The
-        closure holds unchanged for any om.wv_1.0 absolute scale because PPC
-        folds om.wv into its absolute efficiency (verified by re-closing at
-        0.98-1.03 after om.wv moved from the bare 45 cm^2 photocathode to
-        Jpp's 70.77 cm^2 collection area): area is the residual PPC-units
-        conversion on top of om.wv, not a photocathode-area ratio.
-        Derivation and toys: prometheus-docs yield-check ANCHOR_RESULTS.
+        Overall light-collection scale written to om.conf, in units of one
+        PMT's om.wv effective area. The default 0.0 lets PPC self-normalize
+        to its derived value sum_ave -- the direction-averaged sum of the 31
+        per-PMT angular sensitivities (31 x <km3net_as> = 5.717 for the ARCA
+        DOM) -- at which the simulated module reproduces the physical
+        sum-over-PMTs response with no calibrated constant. A positive value
+        overrides the derivation; the independent cascade-yield closure
+        measured 5.53, agreeing with the derived value to 3% (residual
+        attributable to the analytic reference's effective-track-length
+        constant). Derivation and toys: yield-check ANCHOR_RESULTS.
 
     Returns
     -------

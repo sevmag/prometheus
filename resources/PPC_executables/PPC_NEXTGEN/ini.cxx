@@ -258,6 +258,13 @@ struct itype{
     }
     sum_ave/=ico.dirs.size();
 
+    // sum_ave is the direction-averaged sum of per-PMT angular sensitivities:
+    // the area value at which the simulated module reproduces the physical
+    // sum-over-PMTs response in om.wv units, with no calibrated constant.
+    // area<=0 in om.conf selects it (previously such values silently zeroed
+    // the type's rde and dropped every hit).
+    if(area<=0) area=sum_ave;
+    cerr<<setprecision(9)<<"Multi-PMT type: derived area (sum_ave)="<<sum_ave<<", using area="<<area<<setprecision(6)<<endl;
     fx=fr_flat;
     rde=area*fr_flat/sum_ave;
   }
