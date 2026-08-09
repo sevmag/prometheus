@@ -56,6 +56,10 @@ def test_e2e_water(tmp_path):
     cfg.injection.lepton_injector.simulation.minimal_energy = 1e3
     cfg.injection.lepton_injector.simulation.maximal_energy = 1e4
     cfg.detector.geo_file = "resources/geofiles/demo_water.geo"
+    # The demo detector reaches 3800 m depth, deeper than the 2000 m water
+    # column of the generic PREM_water.dat it resolves to; this test exercises
+    # the pipeline, not the earth model, so skip the consistency check.
+    cfg.detector.check_earth_consistency = False
 
     prom = Prometheus(cfg)
     prom.sim()
