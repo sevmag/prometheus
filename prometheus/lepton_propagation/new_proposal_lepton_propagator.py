@@ -2,6 +2,7 @@
 # photonpropagator.py
 # Authors: Christian Haack, Jeffrey Lazar, Stephan Meighen-Berger,
 
+import logging
 from typing import List
 
 import numpy as np
@@ -12,6 +13,8 @@ from ..particle import Particle, particle_from_proposal
 from ..utils.units import GeV_to_MeV, MeV_to_GeV, cm_to_m, m_to_cm
 from .lepton_propagator import LeptonPropagator
 from .loss import Loss
+
+logger = logging.getLogger(__name__)
 from .registry import register_lepton_propagator
 
 MEDIUM_DICT = {
@@ -289,7 +292,23 @@ def new_proposal_losses(
     """
     init_state = init_pp_particle(particle, coordinate_shift)
     propagation_length = np.linalg.norm(particle.position) + padding
-    secondarys = prop.propagate(init_state, propagation_length * m_to_cm)
+    # PROPOSAL's utility inversion can fail with "Root must be bracketed in
+    # Bisection method!" on rare pathological sampled loss histories at
+    # extreme energies. The failure is a numerical artifact of the draw, not
+    # of the configuration, so re-propagating (which advances the RNG and
+    # samples a fresh history) resolves it; give up loudly if it persists.
+    for attempt in range(5):
+        try:
+            secondarys = prop.propagate(init_state, propagation_length * m_to_cm)
+            break
+        except RuntimeError as e:
+            if "Root must be bracketed" not in str(e) or attempt == 4:
+                raise
+            logger.warning(
+                "PROPOSAL bisection failure for %s (attempt %d/5); re-propagating",
+                str(particle),
+                attempt + 1,
+            )
     for loss in secondarys.stochastic_losses():
         loss_energy = loss.energy * MeV_to_GeV
         pos = (
