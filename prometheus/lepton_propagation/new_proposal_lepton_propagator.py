@@ -292,11 +292,13 @@ def new_proposal_losses(
     """
     init_state = init_pp_particle(particle, coordinate_shift)
     propagation_length = np.linalg.norm(particle.position) + padding
-    # PROPOSAL's utility inversion can fail with "Root must be bracketed in
-    # Bisection method!" on rare pathological sampled loss histories at
-    # extreme energies. The failure is a numerical artifact of the draw, not
-    # of the configuration, so re-propagating (which advances the RNG and
-    # samples a fresh history) resolves it; give up loudly if it persists.
+    # PROPOSAL aborts with "Root must be bracketed in Bisection method!" for
+    # rare tracks whose start point or trajectory sits exactly on a geometry
+    # shell boundary (or tangent to one): the boundary search loses its
+    # bracket, deterministically for that state. Nudging the start point by
+    # ~1 mm along the track direction -- negligible against detector and
+    # earth-shell scales -- restores the bracket; give up loudly if even
+    # growing nudges do not.
     for attempt in range(5):
         try:
             secondarys = prop.propagate(init_state, propagation_length * m_to_cm)
@@ -304,10 +306,18 @@ def new_proposal_losses(
         except RuntimeError as e:
             if "Root must be bracketed" not in str(e) or attempt == 4:
                 raise
+            nudge_cm = 1e-3 * (attempt + 1) * m_to_cm
+            init_state.position = pp.Cartesian3D(
+                init_state.position.x + init_state.direction.x * nudge_cm,
+                init_state.position.y + init_state.direction.y * nudge_cm,
+                init_state.position.z + init_state.direction.z * nudge_cm,
+            )
             logger.warning(
-                "PROPOSAL bisection failure for %s (attempt %d/5); re-propagating",
+                "PROPOSAL bisection failure for %s (attempt %d/5); retrying "
+                "with the start nudged %.0f mm along the track",
                 str(particle),
                 attempt + 1,
+                1e3 * 1e-3 * (attempt + 1),
             )
     for loss in secondarys.stochastic_losses():
         loss_energy = loss.energy * MeV_to_GeV
