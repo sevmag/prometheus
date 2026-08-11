@@ -290,6 +290,21 @@ def new_proposal_losses(
         between the center of the Earth and the start of the atmosphere,
         and should usually only have a z-component.
     """
+    # Extreme-inelasticity CC events can hand the outgoing lepton almost
+    # nothing (LeptonInjector emits muons even below the muon rest mass).
+    # Such leptons sit below the Cherenkov threshold in water (~160 MeV total
+    # for muons, ~2.7 GeV for taus) so they produce no detectable light, and
+    # PROPOSAL's interpolation breaks below its lower table edge on them
+    # ("Root must be bracketed"). Skip propagation entirely.
+    min_e_gev = 2.0 if abs(particle.pdg_code) == 15 else 0.2
+    if particle.e <= min_e_gev:
+        logger.warning(
+            "Skipping PROPOSAL for %s with E=%.4g GeV (below Cherenkov threshold)",
+            str(particle),
+            particle.e,
+        )
+        return
+
     init_state = init_pp_particle(particle, coordinate_shift)
     propagation_length = np.linalg.norm(particle.position) + padding
     # PROPOSAL aborts with "Root must be bracketed in Bisection method!" for
