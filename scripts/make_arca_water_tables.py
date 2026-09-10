@@ -14,6 +14,13 @@ import numpy as np
 PR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(PR, "resources")
 OUT = os.path.join(RES, "PPC_tables", "arca_water")
+
+# Jpp ships two photocathode curves. KM3NET::getQE is its default and matches
+# the QE measured for the R12199-02 and R14374-02 tubes KM3NeT deploys, both
+# peaking near 28% (arXiv:2504.02989 fig. 3). KM3NET_HIGHQE::getQE peaks at
+# 38.3% and describes neither, so it would overstate the absolute light yield
+# by ~23% over the detected spectrum.
+QE_CSV = "KM3NeT_QE_jpp_standard.csv"
 # icemodel.par, rnd.txt and as.dat are verbatim copies of icecube/ppc's
 # ice/spice_ftp-v3m. PPC_UPSTREAM_ICE may point at that directory in an
 # icecube/ppc checkout to refresh them; unset, the copies shipped in OUT are kept.
@@ -92,7 +99,7 @@ with open(os.path.join(OUT, "cfg.txt"), "w") as f:
     )
     f.write("1.04\n")
 # 4) wv.dat: Cherenkov(1/lambda^2) x high-QE, CDF over 301..719 nm
-qw, qq = rd(os.path.join(RES, "KM3NeT_QE_jpp_highQE.csv"))
+qw, qq = rd(os.path.join(RES, QE_CSV))
 grid = np.arange(300.0, 720.0 + 1e-6, 10.0)
 qe = np.clip(np.interp(grid, qw, qq), 1e-9, None)
 dens = (1.0 / grid**2) * (qe / 100.0)  # Cherenkov(1/lambda^2) x QE density

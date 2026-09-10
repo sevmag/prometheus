@@ -1,0 +1,50 @@
+# Jpp getQE (KM3NET, the default of the two) — effective QE %, INCLUDES glass+gel absorption + collection eff
+# source: nikhef.nl/~mjg/Jpp/public/KM3NeT_8hh_source.html
+# Matches the photocathode QE measured for the R12199-02 and R14374-02 tubes
+# KM3NeT deploys, both peaking near 28% (arXiv:2504.02989 fig. 3); the HIGHQE
+# variant peaks at 38.3% and corresponds to neither.
+wavelength_nm,effective_qe_percent
+290,0.000
+300,0.000
+310,1.860
+320,7.721
+330,15.912
+340,21.981
+350,24.729
+360,26.476
+370,27.525
+380,27.213
+390,28.295
+400,27.973
+410,27.435
+420,26.905
+430,26.527
+440,25.978
+450,25.203
+460,23.898
+470,22.252
+480,20.827
+490,19.997
+500,19.326
+510,18.546
+520,16.584
+530,13.321
+540,10.680
+550,9.096
+560,7.924
+570,7.131
+580,6.252
+590,5.373
+600,4.577
+610,3.738
+620,3.111
+630,2.442
+640,1.947
+650,1.578
+660,1.270
+670,0.907
+680,0.626
+690,0.435
+700,0.252
+710,0.000
+720,0.000
