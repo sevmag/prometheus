@@ -27,7 +27,7 @@
 #define WNUM   512   // number of wavelength slices
 #define MAXLYS 172   // maximum number of ice layers
 #define MAXGEO 16384 // maximum number of OMs
-#define MAXRND 131072 // max. number of random number multipliers
+#define MAXRND 150000 // max. number of random number multipliers; fits the largest shipped rnd.txt
 
 // #define DTMN
 #define XXX 1.e-5f
@@ -876,8 +876,8 @@ struct ini{
 
       size=rx.size();
       if(size>MAXRND){
-	cerr<<"Error: too many random multipliers ("<<size<<"), truncating to "<<MAXRND<<endl;
-	size=MAXRND;
+	cerr<<"Error: too many random multipliers ("<<size<<"), maximum is "<<MAXRND<<endl;
+	exit(1);
       }
 
       cerr<<"Loaded "<<size<<" random multipliers"<<endl;
@@ -1100,8 +1100,8 @@ struct ini{
 
       int gsize = oms.size();
       if(gsize>MAXGEO){
-	cerr<<"Error: too many OMs ("<<gsize<<"), truncating to "<<MAXGEO<<endl;
-	gsize=MAXGEO;
+	cerr<<"Error: too many OMs ("<<gsize<<"), maximum is "<<MAXGEO<<endl;
+	exit(1);
       }
 
       for(int n=0; n<gsize; n++){ q.oms[n]=oms[n]; q.names[n]=names[n]; }
@@ -1557,7 +1557,7 @@ struct ini{
 	  }
 
 	  if(flag) i->second.read(qw, qf);
-	  else cerr<<"Warning: file "<<file<<" was not read. Omitting hits in this OM type!"<<endl;
+	  else{ cerr<<"Error: file "<<file<<" was not read. Would omit all hits in this OM type!"<<endl; exit(1); }
 	}
       }
 
@@ -1642,8 +1642,8 @@ struct ini{
       cerr<<"Loaded "<<size<<" ice layers"<<endl;
 
       if(size>MAXLYS){
-	cerr<<"Error: too many layers ("<<size<<"), truncating to "<<MAXLYS<<endl;
-	size=MAXLYS;
+	cerr<<"Error: too many layers ("<<size<<"), maximum is "<<MAXLYS<<endl;
+	exit(1);
       }
 
       rdh=1/dh; hmin=zoff-dp[size-1];
