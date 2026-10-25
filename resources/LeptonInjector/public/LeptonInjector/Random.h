@@ -6,7 +6,7 @@
 
 // this implements a class to sample numbers just like in an i3 service
 
-#include <random> // default_random_engine, uniform_real_distribution 
+#include <random> // mt19937_64, seed_seq, uniform_real_distribution
 
 namespace LeptonInjector {
 
@@ -22,7 +22,13 @@ namespace LeptonInjector {
             void set_seed(unsigned int new_seed);
 
         private: 
-            std::default_random_engine configuration;
+            // libstdc++'s default_random_engine is minstd_rand0: one cycle of
+            // 2^31 - 2 states on which a seed only picks the starting point. A
+            // file consumes ~1e5 draws, so seeds whose starting points fall
+            // within that distance replay each other's stream and inject the
+            // same primaries. mt19937_64 seeded through seed_seq gives every
+            // seed an independent, decorrelated stream.
+            std::mt19937_64 configuration;
             std::uniform_real_distribution<double> generator;
     };
 
